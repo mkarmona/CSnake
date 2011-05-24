@@ -2,26 +2,53 @@
 <resource xmlns="http://www.wxwindows.org/wxxrc" version="2.3.0.1">
 	<object class="wxFrame" name="frmCSnakeGUI">
 		<style>wxDEFAULT_FRAME_STYLE</style>
-		<size>760,450</size>
+		<size>700,550</size>
 		<title>CSnake GUI</title>
 		<object class="wxMenuBar" name="frmCSnakeGUI_menubar">
 			<label></label>
-			<object class="wxMenu" name="m_menu1">
+			<object class="wxMenu" name="mnuContext">
 				<label>Context</label>
+				<object class="wxMenuItem" name="mnuContextNew">
+					<label>New</label>
+					<help>Create a new context</help>
+				</object>
 				<object class="wxMenuItem" name="mnuContextOpen">
 					<label>Open...\tCTRL-O</label>
-					<help></help>
+					<help>Open a context using a folder browser</help>
 				</object>
 				<object class="wxMenuItem" name="mnuContextCreateACopy">
-					<label>Create a Copy...</label>
-					<help></help>
+					<label>Create a Copy</label>
+					<help>Continue with a copy of the current context. Use menu item Rename or Move to rename the new context.</help>
+				</object>
+				<object class="wxMenuItem" name="mnuContextRename">
+					<label>Rename or Move</label>
+					<help>Rename the current context and/or change its folder location</help>
 				</object>
 				<object class="wxMenuItem" name="mnuContextAbandonChanges">
 					<label>Abandon Changes</label>
-					<help></help>
+					<help>Restore the context to its state after it was opened</help>
 				</object>
+				<object class="separator" />
 				<object class="wxMenuItem" name="mnuExit">
 					<label>Exit\tCTRL-Q</label>
+					<help></help>
+				</object>
+			</object>
+			<object class="wxMenu" name="mnuWizard">
+				<label>Wizard</label>
+				<object class="wxMenuItem" name="mnuImportFolder">
+					<label>Import existing source folder</label>
+					<help>Create a new CSnake file for configuring the source files in an existing folder</help>
+				</object>
+			</object>
+			<object class="wxMenu" name="mnuHelp">
+				<label>Help</label>
+				<object class="wxMenuItem" name="mnuCSnakeManual">
+					<label>CSnake Manual</label>
+					<help></help>
+				</object>
+				<object class="wxMenuItem" name="mnuAbout">
+					<label>About</label>
 					<help></help>
 				</object>
 			</object>
@@ -31,8 +58,15 @@
 			<object class="sizeritem">
 				<option>1</option>
 				<flag>wxALL|wxEXPAND</flag>
-				<border>5</border>
+				<border>0</border>
 				<object class="wxNotebook" name="noteBook">
+					<font>
+						<size>8</size>
+						<family>default</family>
+						<style>normal</style>
+						<weight>normal</weight>
+						<underlined>0</underlined>
+					</font>
 					<object class="notebookpage">
 						<label>Context</label>
 						<selected>1</selected>
@@ -41,280 +75,261 @@
 							<object class="wxBoxSizer">
 								<orient>wxVERTICAL</orient>
 								<object class="sizeritem">
-									<option>0</option>
-									<flag>wxEXPAND</flag>
-									<border>0</border>
+									<option>1</option>
+									<flag>wxEXPAND|wxALL</flag>
+									<border>10</border>
 									<object class="wxBoxSizer">
-										<orient>wxHORIZONTAL</orient>
+										<orient>wxVERTICAL</orient>
 										<object class="sizeritem">
 											<option>0</option>
-											<flag>wxRIGHT|wxEXPAND</flag>
-											<border>5</border>
-											<object class="wxStaticText" name="lbCSnakeFile">
-												<size>120,15</size>
-												<label>CSnake File\n</label>
-											</object>
-										</object>
-										<object class="sizeritem">
-											<option>1</option>
-											<flag></flag>
-											<border>0</border>
-											<object class="wxComboBox" name="cmbCSnakeFile">
-												<value></value>
-												<content />
-											</object>
-										</object>
-										<object class="sizeritem">
-											<option>0</option>
-											<flag></flag>
-											<border>0</border>
-											<object class="wxButton" name="btnSelectCSnakeFile">
-												<size>30, -1</size>
-												<label>...</label>
-												<default>0</default>
-											</object>
-										</object>
-									</object>
-								</object>
-								<object class="sizeritem">
-									<option>0</option>
-									<flag>wxEXPAND</flag>
-									<border>0</border>
-									<object class="wxBoxSizer">
-										<orient>wxHORIZONTAL</orient>
-										<object class="sizeritem">
-											<option>0</option>
-											<flag>wxRIGHT|wxEXPAND</flag>
-											<border>5</border>
-											<object class="wxStaticText" name="labelInstance">
-												<size>120,-1</size>
-												<label>Instance</label>
-											</object>
-										</object>
-										<object class="sizeritem">
-											<option>1</option>
 											<flag>wxEXPAND</flag>
 											<border>0</border>
-											<object class="wxComboBox" name="cmbInstance">
-												<value></value>
-												<content />
-											</object>
-										</object>
-										<object class="sizeritem">
-											<option>0</option>
-											<flag></flag>
-											<border>0</border>
-											<object class="wxButton" name="btnUpdateListOfTargets">
-												<label>Update</label>
-												<default>0</default>
-											</object>
-										</object>
-									</object>
-								</object>
-								<object class="sizeritem">
-									<option>0</option>
-									<flag>wxEXPAND</flag>
-									<border>0</border>
-									<object class="wxBoxSizer">
-										<orient>wxHORIZONTAL</orient>
-										<object class="sizeritem">
-											<option>0</option>
-											<flag>wxRIGHT|wxEXPAND</flag>
-											<border>5</border>
-											<object class="wxStaticText" name="label_1_copy">
-												<size>120,15</size>
-												<label>Build Folder\n</label>
-											</object>
-										</object>
-										<object class="sizeritem">
-											<option>2</option>
-											<flag>wxFIXED_MINSIZE</flag>
-											<border>0</border>
-											<object class="wxTextCtrl" name="txtBuildFolder">
-												<tooltip>This is the location where CSnake will generate the &quot;make files&quot;.</tooltip>
-												<value></value>
-												<maxlength>0</maxlength>
-											</object>
-										</object>
-										<object class="sizeritem">
-											<option>0</option>
-											<flag></flag>
-											<border>0</border>
-											<object class="wxButton" name="btnSelectBuildFolder">
-												<size>30, -1</size>
-												<label>...</label>
-												<default>0</default>
-											</object>
-										</object>
-									</object>
-								</object>
-								<object class="sizeritem">
-									<option>0</option>
-									<flag>wxEXPAND</flag>
-									<border>5</border>
-									<object class="wxBoxSizer">
-										<orient>wxHORIZONTAL</orient>
-										<object class="sizeritem">
-											<option>0</option>
-											<flag>wxRIGHT|wxEXPAND</flag>
-											<border>5</border>
-											<object class="wxStaticText" name="label_1">
-												<size>120,-1</size>
-												<label>Root Folders </label>
-											</object>
-										</object>
-										<object class="sizeritem">
-											<option>1</option>
-											<flag>wxFIXED_MINSIZE|wxEXPAND</flag>
-											<border>0</border>
-											<object class="wxListBox" name="lbRootFolders">
-												<style>wxLB_SINGLE</style>
-												<content />
-											</object>
-										</object>
-										<object class="sizeritem">
-											<option>0</option>
-											<flag>wxEXPAND|wxALIGN_RIGHT</flag>
-											<border>0</border>
 											<object class="wxBoxSizer">
-												<orient>wxVERTICAL</orient>
+												<orient>wxHORIZONTAL</orient>
 												<object class="sizeritem">
-													<option>1</option>
-													<flag></flag>
+													<option>0</option>
+													<flag>wxALL</flag>
 													<border>0</border>
-													<object class="wxButton" name="btnAddRootFolder">
-														<label>Add</label>
-														<default>0</default>
-													</object>
-												</object>
-												<object class="sizeritem">
-													<option>1</option>
-													<flag></flag>
-													<border>0</border>
-													<object class="wxButton" name="btnRemoveRootFolder">
-														<label>Remove</label>
+													<object class="wxButton" name="btnEditCSnakeFile">
+														<size>40,-1</size>
+														<label>Edit</label>
 														<default>0</default>
 													</object>
 												</object>
 												<object class="sizeritem">
 													<option>0</option>
-													<flag>wxALL</flag>
+													<flag>wxEXPAND|wxTOP|wxRIGHT</flag>
+													<border>5</border>
+													<object class="wxStaticText" name="lbCSnakeFile">
+														<style>wxALIGN_RIGHT</style>
+														<size>100,15</size>
+														<label>CSnake File</label>
+													</object>
+												</object>
+												<object class="sizeritem">
+													<option>1</option>
+													<flag></flag>
 													<border>0</border>
-													<object class="wxButton" name="btnDetectRootFolders">
-														<label>Detect</label>
+													<object class="wxComboBox" name="cmbCSnakeFile">
+														<value></value>
+														<content />
+													</object>
+												</object>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag></flag>
+													<border>0</border>
+													<object class="wxButton" name="btnSelectCSnakeFile">
+														<size>30, -1</size>
+														<label>...</label>
 														<default>0</default>
 													</object>
 												</object>
 											</object>
 										</object>
-									</object>
-								</object>
-								<object class="sizeritem">
-									<option>0</option>
-									<flag>wxEXPAND</flag>
-									<border>0</border>
-									<object class="wxPanel" name="panelThirdParty">
-										<style>wxTAB_TRAVERSAL</style>
-										<bg>#ece9d8</bg>
-										<object class="wxBoxSizer">
-											<orient>wxVERTICAL</orient>
-											<object class="sizeritem">
-												<option>1</option>
-												<flag>wxEXPAND</flag>
-												<border>0</border>
-												<object class="wxBoxSizer">
-													<orient>wxHORIZONTAL</orient>
-													<object class="sizeritem">
-														<option>0</option>
-														<flag>wxRIGHT|wxEXPAND</flag>
-														<border>5</border>
-														<object class="wxStaticText" name="label_1_copy_1">
-															<size>120, 15</size>
-															<label>ThirdParty Root Folder</label>
-														</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxEXPAND</flag>
+											<border>0</border>
+											<object class="wxBoxSizer">
+												<orient>wxHORIZONTAL</orient>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxEXPAND|wxTOP|wxRIGHT</flag>
+													<border>5</border>
+													<object class="wxStaticText" name="labelInstance">
+														<style>wxALIGN_RIGHT</style>
+														<size>140,-1</size>
+														<label>Instance</label>
 													</object>
-													<object class="sizeritem">
-														<option>2</option>
-														<flag>wxFIXED_MINSIZE</flag>
-														<border>0</border>
-														<object class="wxTextCtrl" name="txtThirdPartyRootFolder">
-															<tooltip>Optional field for the root of the source tree that contains the Project Folder. CSnake will search this source tree for other projects.</tooltip>
-															<value></value>
-															<maxlength>0</maxlength>
-														</object>
+												</object>
+												<object class="sizeritem">
+													<option>1</option>
+													<flag>wxEXPAND</flag>
+													<border>0</border>
+													<object class="wxComboBox" name="cmbInstance">
+														<value></value>
+														<content />
 													</object>
-													<object class="sizeritem">
-														<option>0</option>
-														<flag></flag>
-														<border>0</border>
-														<object class="wxButton" name="btnSelectThirdPartyRootFolder">
-															<size>30, -1</size>
-															<label>...</label>
-															<default>0</default>
+												</object>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag></flag>
+													<border>0</border>
+													<object class="wxButton" name="btnUpdateListOfTargets">
+														<label>Update</label>
+														<default>0</default>
+													</object>
+												</object>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxEXPAND</flag>
+											<border>0</border>
+											<object class="wxBoxSizer">
+												<orient>wxHORIZONTAL</orient>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxEXPAND|wxTOP|wxRIGHT</flag>
+													<border>5</border>
+													<object class="wxStaticText" name="label_1_copy">
+														<style>wxALIGN_RIGHT</style>
+														<size>140,15</size>
+														<label>Build Folder</label>
+													</object>
+												</object>
+												<object class="sizeritem">
+													<option>2</option>
+													<flag>wxFIXED_MINSIZE|wxEXPAND</flag>
+													<border>0</border>
+													<object class="wxTextCtrl" name="txtBuildFolder">
+														<tooltip>This is the location where CSnake will generate the &quot;make files&quot;.</tooltip>
+														<value></value>
+														<maxlength>0</maxlength>
+													</object>
+												</object>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag></flag>
+													<border>0</border>
+													<object class="wxButton" name="btnSelectBuildFolder">
+														<size>30, -1</size>
+														<label>...</label>
+														<default>0</default>
+													</object>
+												</object>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxEXPAND</flag>
+											<border>5</border>
+											<object class="wxBoxSizer">
+												<orient>wxHORIZONTAL</orient>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxEXPAND|wxTOP|wxRIGHT</flag>
+													<border>5</border>
+													<object class="wxStaticText" name="label_1">
+														<style>wxALIGN_RIGHT</style>
+														<size>140,-1</size>
+														<label>Root Folders</label>
+													</object>
+												</object>
+												<object class="sizeritem">
+													<option>1</option>
+													<flag>wxFIXED_MINSIZE|wxEXPAND</flag>
+													<border>0</border>
+													<object class="wxListBox" name="lbRootFolders">
+														<style>wxLB_SINGLE</style>
+														<content />
+													</object>
+												</object>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxEXPAND|wxALIGN_RIGHT</flag>
+													<border>0</border>
+													<object class="wxBoxSizer">
+														<orient>wxVERTICAL</orient>
+														<object class="sizeritem">
+															<option>1</option>
+															<flag></flag>
+															<border>0</border>
+															<object class="wxButton" name="btnAddRootFolder">
+																<label>Add</label>
+																<default>0</default>
+															</object>
+														</object>
+														<object class="sizeritem">
+															<option>1</option>
+															<flag></flag>
+															<border>0</border>
+															<object class="wxButton" name="btnRemoveRootFolder">
+																<label>Remove</label>
+																<default>0</default>
+															</object>
+														</object>
+														<object class="sizeritem">
+															<option>0</option>
+															<flag>wxALL</flag>
+															<border>0</border>
+															<object class="wxButton" name="btnDetectRootFolders">
+																<label>Detect</label>
+																<default>0</default>
+															</object>
 														</object>
 													</object>
 												</object>
 											</object>
-											<object class="sizeritem">
-												<option>1</option>
-												<flag>wxEXPAND</flag>
-												<border>0</border>
-												<object class="wxBoxSizer">
-													<orient>wxHORIZONTAL</orient>
-													<object class="sizeritem">
-														<option>0</option>
-														<flag>wxRIGHT|wxEXPAND</flag>
-														<border>5</border>
-														<object class="wxStaticText" name="label_1_copy_copy">
-															<size>120, 15</size>
-															<label>ThirdParty Build Folder\n</label>
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>2</option>
-														<flag>wxFIXED_MINSIZE</flag>
-														<border>0</border>
-														<object class="wxTextCtrl" name="txtThirdPartyBuildFolder">
-															<tooltip>This is the location where CSnake will generate the &quot;make files&quot;.</tooltip>
-															<value></value>
-															<maxlength>0</maxlength>
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>0</option>
-														<flag></flag>
-														<border>0</border>
-														<object class="wxButton" name="btnSelectThirdPartyBuildFolder">
-															<size>30, -1</size>
-															<label>...</label>
-															<default>0</default>
-														</object>
-													</object>
-												</object>
-											</object>
-											<object class="sizeritem">
-												<option>1</option>
-												<flag>wxEXPAND</flag>
-												<border>0</border>
-												<object class="wxPanel" name="panelKDevelop">
-													<style>wxTAB_TRAVERSAL</style>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxEXPAND</flag>
+											<border>5</border>
+											<object class="wxBoxSizer">
+												<orient>wxVERTICAL</orient>
+												<object class="sizeritem">
+													<option>1</option>
+													<flag>wxEXPAND</flag>
+													<border>0</border>
 													<object class="wxBoxSizer">
 														<orient>wxHORIZONTAL</orient>
 														<object class="sizeritem">
 															<option>0</option>
-															<flag>wxRIGHT|wxEXPAND</flag>
+															<flag>wxEXPAND|wxTOP|wxBOTTOM|wxRIGHT</flag>
 															<border>5</border>
-															<object class="wxStaticText" name="label_2_copy">
-																<size>120, 15</size>
-																<label>KDevelop Project Folder\n\n</label>
+															<object class="wxStaticText" name="label_1_copy_1">
+																<style>wxALIGN_RIGHT|wxSIMPLE_BORDER</style>
+																<size>140,15</size>
+																<bg>#86d0d2</bg>
+																<label>Third Party Root Folder</label>
 															</object>
 														</object>
 														<object class="sizeritem">
 															<option>2</option>
-															<flag>wxFIXED_MINSIZE</flag>
+															<flag>wxFIXED_MINSIZE|wxEXPAND</flag>
 															<border>0</border>
-															<object class="wxTextCtrl" name="txtKDevelopProjectFolder">
-																<bg>#ffffff</bg>
+															<object class="wxTextCtrl" name="txtThirdPartyRootFolder">
+																<tooltip>Optional field for the root of the source tree that contains the Project Folder. CSnake will search this source tree for other projects.</tooltip>
+																<value></value>
+																<maxlength>0</maxlength>
+															</object>
+														</object>
+														<object class="sizeritem">
+															<option>0</option>
+															<flag></flag>
+															<border>0</border>
+															<object class="wxButton" name="btnSelectThirdPartyRootFolder">
+																<size>30, -1</size>
+																<label>...</label>
+																<default>0</default>
+															</object>
+														</object>
+													</object>
+												</object>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxEXPAND</flag>
+													<border>0</border>
+													<object class="wxBoxSizer">
+														<orient>wxHORIZONTAL</orient>
+														<object class="sizeritem">
+															<option>0</option>
+															<flag>wxEXPAND|wxTOP|wxBOTTOM|wxRIGHT</flag>
+															<border>5</border>
+															<object class="wxStaticText" name="label_1_copy_copy">
+																<style>wxALIGN_RIGHT|wxSIMPLE_BORDER</style>
+																<size>140,15</size>
+																<bg>#86d0d2</bg>
+																<label>Third Party Build Folder\n</label>
+															</object>
+														</object>
+														<object class="sizeritem">
+															<option>2</option>
+															<flag>wxFIXED_MINSIZE|wxEXPAND</flag>
+															<border>0</border>
+															<object class="wxTextCtrl" name="txtThirdPartyBuildFolder">
 																<tooltip>This is the location where CSnake will generate the &quot;make files&quot;.</tooltip>
 																<value></value>
 																<maxlength>0</maxlength>
@@ -324,7 +339,7 @@
 															<option>0</option>
 															<flag></flag>
 															<border>0</border>
-															<object class="wxButton" name="btnSelectKDevelopProjectFolder">
+															<object class="wxButton" name="btnSelectThirdPartyBuildFolder">
 																<size>30, -1</size>
 																<label>...</label>
 																<default>0</default>
@@ -334,117 +349,185 @@
 												</object>
 											</object>
 										</object>
-									</object>
-								</object>
-								<object class="sizeritem">
-									<option>0</option>
-									<flag>wxEXPAND</flag>
-									<border>0</border>
-									<object class="wxPanel" name="panelProjectAndInstance">
-										<style>wxTAB_TRAVERSAL</style>
-										<bg>#c0bfff</bg>
-										<object class="wxBoxSizer">
-											<orient>wxVERTICAL</orient>
-										</object>
-									</object>
-								</object>
-								<object class="sizeritem">
-									<option>0</option>
-									<flag>wxEXPAND</flag>
-									<border>0</border>
-									<object class="wxBoxSizer">
-										<orient>wxHORIZONTAL</orient>
 										<object class="sizeritem">
 											<option>0</option>
-											<flag>wxRIGHT|wxEXPAND</flag>
+											<flag>wxEXPAND</flag>
 											<border>5</border>
-											<object class="wxStaticText" name="label_2">
-												<size>120,15</size>
-												<label>Install Folder\n</label>
+											<object class="wxBoxSizer">
+												<orient>wxHORIZONTAL</orient>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxEXPAND|wxTOP|wxRIGHT</flag>
+													<border>5</border>
+													<object class="wxStaticText" name="labelKDevelopFolder">
+														<style>wxALIGN_RIGHT</style>
+														<size>140,15</size>
+														<label>KDevelop Project Folder</label>
+													</object>
+												</object>
+												<object class="sizeritem">
+													<option>2</option>
+													<flag>wxFIXED_MINSIZE|wxEXPAND</flag>
+													<border>0</border>
+													<object class="wxTextCtrl" name="txtKDevelopProjectFolder">
+														<bg>#ffffff</bg>
+														<tooltip>This is the location where CSnake will generate the &quot;make files&quot;.</tooltip>
+														<value></value>
+														<maxlength>0</maxlength>
+													</object>
+												</object>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag></flag>
+													<border>0</border>
+													<object class="wxButton" name="btnSelectKDevelopProjectFolder">
+														<size>30, -1</size>
+														<label>...</label>
+														<default>0</default>
+													</object>
+												</object>
 											</object>
 										</object>
 										<object class="sizeritem">
-											<option>2</option>
-											<flag>wxFIXED_MINSIZE</flag>
+											<option>0</option>
+											<flag>wxEXPAND</flag>
 											<border>0</border>
-											<object class="wxTextCtrl" name="txtInstallFolder">
-												<tooltip>This is the location where CSnake will generate the &quot;make files&quot;.</tooltip>
+											<object class="wxPanel" name="panelProjectAndInstance">
+												<style>wxTAB_TRAVERSAL</style>
+												<bg>#c0bfff</bg>
+												<object class="wxBoxSizer">
+													<orient>wxVERTICAL</orient>
+												</object>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxEXPAND</flag>
+											<border>0</border>
+											<object class="wxBoxSizer">
+												<orient>wxHORIZONTAL</orient>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxEXPAND|wxTOP|wxRIGHT</flag>
+													<border>5</border>
+													<object class="wxStaticText" name="label_2">
+														<style>wxALIGN_RIGHT</style>
+														<size>140,15</size>
+														<label>Install Folder</label>
+													</object>
+												</object>
+												<object class="sizeritem">
+													<option>2</option>
+													<flag>wxFIXED_MINSIZE|wxEXPAND</flag>
+													<border>0</border>
+													<object class="wxTextCtrl" name="txtInstallFolder">
+														<tooltip>This is the location where CSnake will generate the &quot;make files&quot;.</tooltip>
+														<value></value>
+														<maxlength>0</maxlength>
+													</object>
+												</object>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag></flag>
+													<border>0</border>
+													<object class="wxButton" name="btnSelectInstallFolder">
+														<size>30, -1</size>
+														<label>...</label>
+														<default>0</default>
+													</object>
+												</object>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>1</option>
+											<flag>wxTOP|wxBOTTOM|wxEXPAND</flag>
+											<border>5</border>
+											<object class="wxTextCtrl" name="textLog">
+												<style>wxTE_MULTILINE|wxTE_READONLY|wxTE_WORDWRAP</style>
+												<size>100,100</size>
 												<value></value>
 												<maxlength>0</maxlength>
 											</object>
 										</object>
 										<object class="sizeritem">
 											<option>0</option>
-											<flag></flag>
+											<flag>wxEXPAND</flag>
 											<border>0</border>
-											<object class="wxButton" name="btnSelectInstallFolder">
-												<size>30, -1</size>
-												<label>...</label>
-												<default>0</default>
-											</object>
-										</object>
-									</object>
-								</object>
-								<object class="sizeritem">
-									<option>1</option>
-									<flag>wxTOP|wxBOTTOM|wxEXPAND</flag>
-									<border>5</border>
-									<object class="wxTextCtrl" name="textLog">
-										<style>wxTE_MULTILINE|wxTE_READONLY|wxTE_WORDWRAP</style>
-										<size>100,100</size>
-										<value></value>
-										<maxlength>0</maxlength>
-									</object>
-								</object>
-								<object class="sizeritem">
-									<option>0</option>
-									<flag>wxEXPAND</flag>
-									<border>0</border>
-									<object class="wxBoxSizer">
-										<orient>wxHORIZONTAL</orient>
-										<object class="sizeritem">
-											<option>0</option>
-											<flag>wxALL</flag>
-											<border>5</border>
-											<object class="wxButton" name="btnCreateCMakeFilesAndRunCMake">
-												<label>Create CMake files and run CMake</label>
-												<default>0</default>
+											<object class="wxBoxSizer">
+												<orient>wxHORIZONTAL</orient>
 											</object>
 										</object>
 										<object class="sizeritem">
 											<option>0</option>
-											<flag>wxALL</flag>
+											<flag>wxALIGN_CENTER_HORIZONTAL</flag>
 											<border>5</border>
-											<object class="wxButton" name="btnOnlyCreateCMakeFiles">
-												<label>Only create CMake files</label>
-												<default>0</default>
-											</object>
-										</object>
-										<object class="sizeritem">
-											<option>0</option>
-											<flag>wxALL</flag>
-											<border>5</border>
-											<object class="wxButton" name="btnConfigureThirdPartyFolder">
-												<label>Configure Third Party Folder</label>
-												<default>0</default>
-											</object>
-										</object>
-										<object class="sizeritem">
-											<option>0</option>
-											<flag>wxALL</flag>
-											<border>5</border>
-											<object class="wxButton" name="btnInstallFilesToBuildFolder">
-												<label>Install files to Build Folder</label>
-												<default>0</default>
-											</object>
-										</object>
-										<object class="sizeritem">
-											<option>0</option>
-											<flag>wxALL</flag>
-											<border>5</border>
-											<object class="wxButton" name="btnLaunchIDE">
-												<label>Launch IDE</label>
-												<default>0</default>
+											<object class="wxGridSizer">
+												<rows>2</rows>
+												<cols>3</cols>
+												<vgap>0</vgap>
+												<hgap>0</hgap>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxALL</flag>
+													<border>5</border>
+													<object class="wxButton" name="btnCreateCMakeFilesAndRunCMake">
+														<size>175,40</size>
+														<label>Create solution</label>
+														<default>0</default>
+													</object>
+												</object>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxALL</flag>
+													<border>5</border>
+													<object class="wxButton" name="btnConfigureThirdPartyFolder">
+														<size>175,40</size>
+														<bg>#86d0d2</bg>
+														<label>Create third party solution</label>
+														<default>0</default>
+													</object>
+												</object>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxALL</flag>
+													<border>5</border>
+													<object class="wxButton" name="btnInstallFilesToBuildFolder">
+														<size>175,40</size>
+														<label>Install files to Build Folder</label>
+														<default>0</default>
+													</object>
+												</object>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxALL</flag>
+													<border>5</border>
+													<object class="wxButton" name="btnLaunchIDE">
+														<size>175,40</size>
+														<label>Open solution in IDE</label>
+														<default>0</default>
+													</object>
+												</object>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxALL</flag>
+													<border>5</border>
+													<object class="wxButton" name="btnLaunchIDEThirdParty">
+														<size>175,40</size>
+														<bg>#86d0d2</bg>
+														<label>Open third party solution in IDE</label>
+														<default>0</default>
+													</object>
+												</object>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxALL</flag>
+													<border>5</border>
+													<object class="wxButton" name="btnOnlyCreateCMakeFiles">
+														<size>175,40</size>
+														<label>Only create CMake files</label>
+														<default>0</default>
+													</object>
+												</object>
 											</object>
 										</object>
 									</object>
@@ -466,125 +549,252 @@
 									<object class="wxBoxSizer">
 										<orient>wxVERTICAL</orient>
 										<object class="sizeritem">
-											<option>0</option>
-											<flag>wxEXPAND</flag>
-											<border>0</border>
+											<option>1</option>
+											<flag>wxEXPAND|wxALL</flag>
+											<border>5</border>
 											<object class="wxStaticBoxSizer">
-												<orient>wxHORIZONTAL</orient>
+												<orient>wxVERTICAL</orient>
+												<label>CMake</label>
+												<object class="sizeritem">
+													<option>1</option>
+													<flag>wxEXPAND</flag>
+													<border>5</border>
+													<object class="wxBoxSizer">
+														<orient>wxHORIZONTAL</orient>
+														<object class="sizeritem">
+															<option>0</option>
+															<flag>wxALL</flag>
+															<border>5</border>
+															<object class="wxStaticText" name="m_staticText9">
+																<style>wxALIGN_RIGHT</style>
+																<size>170,-1</size>
+																<label>Use CMake version</label>
+															</object>
+														</object>
+														<object class="sizeritem">
+															<option>1</option>
+															<flag>wxEXPAND</flag>
+															<border>0</border>
+															<object class="wxComboBox" name="cmbCMakeVersion">
+																<style>wxCB_READONLY</style>
+																<value></value>
+																<content />
+															</object>
+														</object>
+													</object>
+												</object>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxEXPAND</flag>
+													<border>0</border>
+													<object class="wxBoxSizer">
+														<orient>wxHORIZONTAL</orient>
+														<object class="sizeritem">
+															<option>0</option>
+															<flag>wxRIGHT</flag>
+															<border>5</border>
+															<object class="wxButton" name="btnSetCMakePath">
+																<size>175,-1</size>
+																<label>Set path to CMake &lt;x.y&gt;</label>
+																<default>0</default>
+															</object>
+														</object>
+														<object class="sizeritem">
+															<option>1</option>
+															<flag>wxEXPAND</flag>
+															<border>0</border>
+															<object class="wxTextCtrl" name="txtCMakePath">
+																<size>20,20</size>
+																<value></value>
+																<maxlength>0</maxlength>
+															</object>
+														</object>
+													</object>
+												</object>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxEXPAND|wxALL</flag>
+											<border>5</border>
+											<object class="wxStaticBoxSizer">
+												<orient>wxVERTICAL</orient>
 												<label>Compiler</label>
 												<object class="sizeritem">
 													<option>1</option>
 													<flag>wxEXPAND</flag>
-													<border>0</border>
-													<object class="wxComboBox" name="cmbCompiler">
-														<style>wxCB_READONLY</style>
-														<value></value>
-														<content />
-													</object>
-												</object>
-											</object>
-										</object>
-										<object class="sizeritem">
-											<option>0</option>
-											<flag>wxEXPAND</flag>
-											<border>0</border>
-											<object class="wxBoxSizer">
-												<orient>wxHORIZONTAL</orient>
-												<object class="sizeritem">
-													<option>0</option>
-													<flag></flag>
-													<border>0</border>
-													<object class="wxButton" name="btnSetCMakePath">
-														<size>150,-1</size>
-														<label>Set path to CMake</label>
-														<default>0</default>
+													<border>5</border>
+													<object class="wxBoxSizer">
+														<orient>wxHORIZONTAL</orient>
+														<object class="sizeritem">
+															<option>0</option>
+															<flag>wxALL</flag>
+															<border>5</border>
+															<object class="wxStaticText" name="m_staticText10">
+																<style>wxALIGN_RIGHT</style>
+																<size>170,-1</size>
+																<label>Generate solution for compiler</label>
+															</object>
+														</object>
+														<object class="sizeritem">
+															<option>1</option>
+															<flag>wxEXPAND</flag>
+															<border>0</border>
+															<object class="wxComboBox" name="cmbCompiler">
+																<style>wxCB_READONLY</style>
+																<value></value>
+																<content />
+															</object>
+														</object>
 													</object>
 												</object>
 												<object class="sizeritem">
 													<option>1</option>
-													<flag></flag>
+													<flag>wxEXPAND</flag>
+													<border>5</border>
+													<object class="wxBoxSizer">
+														<orient>wxHORIZONTAL</orient>
+														<object class="sizeritem">
+															<option>0</option>
+															<flag>wxALL</flag>
+															<border>5</border>
+															<object class="wxStaticText" name="m_staticText12">
+																<style>wxALIGN_RIGHT</style>
+																<size>170,-1</size>
+																<label>Using build type</label>
+															</object>
+														</object>
+														<object class="sizeritem">
+															<option>1</option>
+															<flag>wxEXPAND</flag>
+															<border>0</border>
+															<object class="wxComboBox" name="cmbBuildType">
+																<style>wxCB_READONLY</style>
+																<value></value>
+																<content />
+															</object>
+														</object>
+													</object>
+												</object>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxEXPAND</flag>
 													<border>0</border>
-													<object class="wxTextCtrl" name="txtCMakePath">
-														<size>20,20</size>
-														<value></value>
-														<maxlength>0</maxlength>
+													<object class="wxBoxSizer">
+														<orient>wxHORIZONTAL</orient>
+														<object class="sizeritem">
+															<option>0</option>
+															<flag>wxRIGHT</flag>
+															<border>5</border>
+															<object class="wxButton" name="btnSetIDEPath">
+																<size>175,-1</size>
+																<label>Set path to &lt;IDE&gt;</label>
+																<default>0</default>
+															</object>
+														</object>
+														<object class="sizeritem">
+															<option>1</option>
+															<flag>wxEXPAND</flag>
+															<border>0</border>
+															<object class="wxTextCtrl" name="txtIDEPath">
+																<size>20,20</size>
+																<value></value>
+																<maxlength>0</maxlength>
+															</object>
+														</object>
 													</object>
 												</object>
 											</object>
 										</object>
 										<object class="sizeritem">
-											<option>1</option>
-											<flag>wxEXPAND</flag>
-											<border>0</border>
-											<object class="wxComboBox" name="cmbBuildType">
-												<style>wxCB_READONLY</style>
-												<value></value>
-												<content />
+											<option>0</option>
+											<flag>wxEXPAND|wxALL</flag>
+											<border>5</border>
+											<object class="wxStaticBoxSizer">
+												<orient>wxVERTICAL</orient>
+												<label>Python</label>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxEXPAND|wxALL</flag>
+													<border>0</border>
+													<object class="wxBoxSizer">
+														<orient>wxHORIZONTAL</orient>
+														<object class="sizeritem">
+															<option>0</option>
+															<flag>wxRIGHT</flag>
+															<border>5</border>
+															<object class="wxButton" name="btnSetPythonPath">
+																<size>175,-1</size>
+																<label>Set path to Python</label>
+																<default>0</default>
+															</object>
+														</object>
+														<object class="sizeritem">
+															<option>1</option>
+															<flag>wxEXPAND</flag>
+															<border>0</border>
+															<object class="wxTextCtrl" name="txtPythonPath">
+																<size>20,20</size>
+																<value></value>
+																<maxlength>0</maxlength>
+															</object>
+														</object>
+													</object>
+												</object>
 											</object>
 										</object>
-									</object>
-								</object>
-								<object class="sizeritem">
-									<option>0</option>
-									<flag>wxEXPAND</flag>
-									<border>0</border>
-									<object class="wxBoxSizer">
-										<orient>wxHORIZONTAL</orient>
 										<object class="sizeritem">
 											<option>0</option>
-											<flag></flag>
-											<border>0</border>
-											<object class="wxButton" name="btnSetPythonPath">
-												<size>150,-1</size>
-												<label>Set path to Python</label>
-												<default>0</default>
-											</object>
-										</object>
-										<object class="sizeritem">
-											<option>1</option>
-											<flag></flag>
-											<border>0</border>
-											<object class="wxTextCtrl" name="txtPythonPath">
-												<size>20,20</size>
-												<value></value>
-												<maxlength>0</maxlength>
-											</object>
-										</object>
-									</object>
-								</object>
-								<object class="sizeritem">
-									<option>0</option>
-									<flag></flag>
-									<border>0</border>
-									<object class="wxCheckBox" name="chkAskToLaunchVisualStudio">
-										<label>Ask to launch VisualStudio</label>
-										<checked>0</checked>
-									</object>
-								</object>
-								<object class="sizeritem">
-									<option>0</option>
-									<flag>wxEXPAND</flag>
-									<border>0</border>
-									<object class="wxBoxSizer">
-										<orient>wxHORIZONTAL</orient>
-										<object class="sizeritem">
-											<option>0</option>
-											<flag></flag>
-											<border>0</border>
-											<object class="wxButton" name="btnSetVisualStudioPath">
-												<size>150,-1</size>
-												<label>Set path to Visual Studio</label>
-												<default>0</default>
-											</object>
-										</object>
-										<object class="sizeritem">
-											<option>1</option>
-											<flag></flag>
-											<border>0</border>
-											<object class="wxTextCtrl" name="txtVisualStudioPath">
-												<size>20,20</size>
-												<value></value>
-												<maxlength>0</maxlength>
+											<flag>wxEXPAND|wxALL</flag>
+											<border>5</border>
+											<object class="wxStaticBoxSizer">
+												<orient>wxVERTICAL</orient>
+												<label>CSnake</label>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxEXPAND|wxALL</flag>
+													<border>5</border>
+													<object class="wxBoxSizer">
+														<orient>wxVERTICAL</orient>
+														<object class="sizeritem">
+															<option>0</option>
+															<flag>wxALL</flag>
+															<border>5</border>
+															<object class="wxCheckBox" name="chkAutomaticallyInstallFiles">
+																<label>After the Create Solution step, automatically run Install files to Build Folder for files that are newer</label>
+																<checked>1</checked>
+															</object>
+														</object>
+													</object>
+												</object>
+												<object class="sizeritem">
+													<option>1</option>
+													<flag>wxEXPAND</flag>
+													<border>5</border>
+													<object class="wxBoxSizer">
+														<orient>wxHORIZONTAL</orient>
+														<object class="sizeritem">
+															<option>0</option>
+															<flag>wxRIGHT</flag>
+															<border>5</border>
+															<object class="wxButton" name="btnSetTextEditorPath">
+																<size>175,-1</size>
+																<label>Set path to Text Editor</label>
+																<default>0</default>
+															</object>
+														</object>
+														<object class="sizeritem">
+															<option>1</option>
+															<flag>wxEXPAND</flag>
+															<border>0</border>
+															<object class="wxTextCtrl" name="txtTextEditorPath">
+																<size>20,20</size>
+																<value></value>
+																<maxlength>0</maxlength>
+															</object>
+														</object>
+													</object>
+												</object>
 											</object>
 										</object>
 									</object>
@@ -600,12 +810,28 @@
 							<object class="wxBoxSizer">
 								<orient>wxVERTICAL</orient>
 								<object class="sizeritem">
-									<option>0</option>
-									<flag>wxALL</flag>
+									<option>1</option>
+									<flag>wxEXPAND|wxALL</flag>
 									<border>5</border>
-									<object class="wxButton" name="btnForceRefreshProjects">
-										<label>Refresh List</label>
-										<default>0</default>
+									<object class="wxBoxSizer">
+										<orient>wxVERTICAL</orient>
+										<object class="sizeritem">
+											<option>1</option>
+											<flag>wxALL|wxEXPAND</flag>
+											<border>5</border>
+											<object class="wxCheckListBox" name="checkListProjects">
+												<content />
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxButton" name="btnForceRefreshProjects">
+												<label>Refresh List</label>
+												<default>0</default>
+											</object>
+										</object>
 									</object>
 								</object>
 							</object>
@@ -617,6 +843,117 @@
 		<object class="wxStatusBar" name="statusBar">
 			<style>wxST_SIZEGRIP</style>
 			<fields>1</fields>
+		</object>
+	</object>
+	<object class="wxDialog" name="dialogImportSourceFolder">
+		<style>wxDEFAULT_DIALOG_STYLE</style>
+		<size>450,450</size>
+		<title>Import source folder</title>
+		<object class="wxBoxSizer">
+			<orient>wxVERTICAL</orient>
+			<object class="sizeritem">
+				<option>1</option>
+				<flag>wxEXPAND|wxALL</flag>
+				<border>5</border>
+				<object class="wxStaticBoxSizer">
+					<orient>wxVERTICAL</orient>
+					<label>Find C++ sources in the following folder (and subfolders)</label>
+					<object class="sizeritem">
+						<option>1</option>
+						<flag>wxALL|wxEXPAND</flag>
+						<border>5</border>
+						<object class="wxGenericDirCtrl" name="dirControlImportFolder">
+							<defaultfolder></defaultfolder>
+							<filter></filter>
+							<defaultfilter>0</defaultfilter>
+							<style>wxDIRCTRL_3D_INTERNAL|wxSUNKEN_BORDER</style>
+						</object>
+					</object>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxEXPAND</flag>
+						<border>5</border>
+						<object class="wxBoxSizer">
+							<orient>wxHORIZONTAL</orient>
+							<object class="sizeritem">
+								<option>1</option>
+								<flag>wxALL</flag>
+								<border>5</border>
+								<object class="wxTextCtrl" name="txtImportFolder">
+									<style>wxTE_PROCESS_ENTER</style>
+									<value></value>
+									<maxlength>0</maxlength>
+								</object>
+							</object>
+						</object>
+					</object>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxEXPAND</flag>
+				<border>5</border>
+				<object class="wxBoxSizer">
+					<orient>wxHORIZONTAL</orient>
+					<object class="sizeritem">
+						<option>1</option>
+						<flag>wxALL</flag>
+						<border>5</border>
+						<object class="wxRadioBox" name="radioBoxProjectType">
+							<style>wxRA_SPECIFY_COLS</style>
+							<label>Select the type for the new project</label>
+							<selection>0</selection>
+							<content>
+								<item>Executable</item>
+								<item>Static library</item>
+								<item>Dynamic library</item>
+							</content>
+							<dimension>1</dimension>
+						</object>
+					</object>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxEXPAND</flag>
+				<border>5</border>
+				<object class="wxBoxSizer">
+					<orient>wxHORIZONTAL</orient>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<border>5</border>
+						<object class="wxButton" name="btnImport">
+							<label>Import</label>
+							<default>0</default>
+						</object>
+					</object>
+					<object class="spacer">
+						<option>1</option>
+						<flag>wxEXPAND</flag>
+						<border>5</border>
+						<size>0,0</size>
+					</object>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<border>5</border>
+						<object class="wxButton" name="btnCancelImport">
+							<label>Cancel</label>
+							<default>0</default>
+						</object>
+					</object>
+				</object>
+			</object>
+		</object>
+	</object>
+	<object class="wxFrame" name="frmHelp">
+		<style>wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL</style>
+		<size>500,300</size>
+		<title>CSnake Manual</title>
+		<object class="wxHtmlWindow" name="htmlCSnakeManual">
+			<style>wxHW_SCROLLBAR_AUTO</style>
+			<size>400,400</size>
 		</object>
 	</object>
 </resource>

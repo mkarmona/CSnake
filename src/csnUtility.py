@@ -1,10 +1,12 @@
+# Author: Maarten Nieber
+
 import os
 import re
 import sys
 import GlobDirectoryWalker
 import shutil
 import inspect
-import pprint
+import fnmatch
 
 def NormalizePath(path):
     return os.path.normpath(path).replace("\\", "/")
@@ -21,12 +23,10 @@ def CopyFolder(fromFolder, toFolder, excludedFolderList = None):
         target = NormalizePath(toFolder + "/" + RemovePrefixFromPath(file, fromFolder))
         if os.path.isdir(file):
             if not os.path.exists(target):
-                #print "makedirs %s\n" % newFolder
                 os.makedirs(target)
         else:
             targetFolder = os.path.dirname(target)
             if not os.path.exists(targetFolder):
-                #print "mkdirs %s\n" % targetFolder
                 os.makedirs(targetFolder)
             #print "Copy %s to %s\n" % (file, target)
             shutil.copy(file, target)
@@ -137,8 +137,53 @@ def FindFilePathInStack(keyWord):
             return NormalizePath(os.path.dirname(x[1]))
     return ""
 
-def GetSourceFileExtensions():
-    return ["cxx", "cc", "cpp"]
+def GetSourceFileExtensions(includeDot = False):
+    result = ["cxx", "cc", "cpp", "c"]
+    if includeDot:
+        result = ["." + x for x in result]
+    return result
     
-def GetIncludeFileExtensions():
-    return ["h", "hpp", "txx"]
+def GetIncludeFileExtensions(includeDot = False):
+    result = ["h", "hpp", "txx"]
+    if includeDot:
+        result = ["." + x for x in result]
+    return result
+
+def CheckIsList(x):
+    if not (type(x) == type(list())):
+        raise "Not a list"
+
+def CheckIsListOrNone(x):
+    if not x is None:
+        CheckIsList(x)
+        
+def LocateApplication(rootPaths, applicationPaths):
+    """ 
+    Tries to find a file that has path r/a, where r is a path in rootPaths and a is a path in applicationPaths.
+    Returns (a, r/a), or () if not found.
+    """
+    for path in applicationPaths:
+        for rootPath in rootPaths:
+            result = "%s/%s" % (rootPath, path)
+            if os.path.isfile(result):
+                return (path, result)
+    return ("", "")
+
+def FindDrives(env):
+    result = []
+    for i in range(ord('a'), ord('z')+1):
+        drive = chr(i)
+        if(os.exists(drive +":\\")):
+            result.append(drive)
+    return result
+
+def PathToList(path):
+    result = []
+    folder = NormalizePath(path)
+    previousFolder = ""
+    while folder != previousFolder:
+        previousFolder = folder
+        (folder, leaf) = os.path.split(folder)
+        folder = NormalizePath(folder)
+        result.append(leaf)
+    return result

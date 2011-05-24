@@ -1,3 +1,5 @@
+# Author: Maarten Nieber
+
 import csnUtility
 import csnCMake
 import os.path
@@ -12,15 +14,6 @@ import shutil
 #
 # This block contains an introduction to the CSnake code. It's main purpose is to introduce some common terminology and concepts.
 #  It is assumed that the reader has already read the CSnake user manual.
-#
-# Terminology:
-# dependency project - Project that must also be built in order to built the target project. Modelled by class csnBuild.Project.
-# public dependency - If a project A is publicly dependent on B, then projects that are dependent on A will have to include from (and link to)  B.
-# build folder - Folder where all intermediate build results (CMakeCache.txt, .obj files, etc) are stored for the target project and all dependency projects.
-# build results folder - Folder where all final build results (executables, dlls etc) are stored.
-# install folder - Folder to which the build results are copied, and from which you can run the application. Note that CSnake allows you to use the build folder as the install folder as well.
-# configuration name - Identifies a build configuration, such as "Debug" or "Release". The name "DebugAndRelease" means that both Debug and Release must be generated.
-# source root folder - Folder used for locating the source files for a project. When adding sources to a project, names relative to the source root folder may be used.
 #
 # Config and use file:
 # CMake uses config and use files to let packages use other packages. The config file assigns a number of variables
@@ -39,45 +32,63 @@ import shutil
 # Compilers
 #
 # In this version of CSnake, you are required to specify the compiler that you will use to build your project. Examples of compiler instances are csnKDevelop.Compiler and csnVisualStudio2003.Compiler.
-# I choose this design because it allowed me to simplify the code a lot. For example, when adding a compiler definition for linux, a check is performed to see if the project uses a linux compiler; it not,
+# I chose this design because it allowed me to simplify the code a lot. For example, when adding a compiler definition for linux, a check is performed to see if the project uses a linux compiler; it not,
 # the definition is simply ignored.
 # The default compiler is stored in csnProject.globalSettings.compilerType. If you create a Project without specifying a compiler, then this compiler will be assigned to the project instance.
 #
 
 # ToDo:
-# - Button Launch IDE third parties
-# - Install to build folder using symbolic links
+# - ImportWizard leaves a window behind when it closes
+# - In windows, Debug build type does not work
+# - Replace arguments such as _ONLY_WIN32 with flags: AddSources(sources, flags = [onlyWin32, onlyRelease]). From csnFlags import *.
+# - It seems that the preprocessor definitions are not properly generated when AddDefinitions? is called for multiple definitions. 
+# - Check that created filenames are not too long (especially with XYZApplications_BLABLA)
+# - Why are definitions used directly in the use file, instead of via a CMake variable?
+# - Automatically add -D for definitions in windows
+# - It seems adding definition "/Zm200" does not work. It is treated as a preprocessor define and not as a compiler option
+# - Improve documentation and usability of AddFilesToInstall
 # - If you choose GeoAPIApplications in GIMIAS without any plugin, you do not see the GeoAPI apps in the solution
-# - Move recently used files list out of csnContext class
-# - Create .csnake subfolder in the build folder for storing csnake specific files, including the context used to configure the project
-# - Also store thirdparty folders in rootfolders.csnake. Use an ini file.
-# - Automatically delete CMakeCache if this is needed (using .csnake/context in build folder)
-# - Only configure third parties that are needed for the target
-# - Rename GetOutputFolder to GetBuildResultsFolder
-# - SelectProjects tab should scroll
-# - Get rid of prebuiltBinariesFolder
-# - Drop down box: Edit csnake file (one item for each csnake file in the solution)
-# - Use FIND_PACKAGE always
-# - Instead of having AddLibraries and AddLibraryFolders, only have AddLibraries and let CSnake take care of extracting list of library folders.
-# - Place non-essential fields of csnContext in members such as gui.compiler
-# - Try to detect compiler location (in a few standard locations) and python location
-# - CSnakeGUI should remember all the IDE paths for different ides.
-# - Add recently used context files (wx.FileHistory)
-# - Move cmake path and ide path from context file to options file
+# - Get rid of prebuiltBinariesFolder?
+# - Fix module reloading. Check out super_reload
+# - Bad smell: Relative paths in _list are assumed to be relative to the third party binary folder. Disallow relative paths? Document in AddFilesToInstall and ResolvePathsOfFilesToInstall
+# - Replace string labels with class types
+# - Get rid of underscore in arguments
+# - How to handle the fact that installing files overwrites existing files?
+
+# New features
+# - Create csn file automatically: support tests and libraries
+# - Create csn file automatically: wizard asks for project type, proposes python modules to import, and dependency projects within those modes
+# - Create csn file automatically: support cilab module project and GIMIAS plugin
+# - option create-context in csnConsole
+# - Support doxygen
+# - Support for cxxtest should be more built-in (now it works because cxxtest is part of the toolkit third parties)
+# - In case of an exception. show the stack trace in a nice way. Double clicking in the stack trace opens offending line in a text editor
+# - Have more control over which tests are run
+# - Have seperate checkListBox for super categories
 # - Build all stuff in DebugAndRelease, Debug or Release. Support DebugAndRelease in Linux by building to both Debug and Release
+# - Support clean syntax in which each project is a function (csnProject.RegisterProject(itk))
+# - Add recently used context files (wx.FileHistory)
+# - Edit button should be a butcon which allows to edit any csnake file in the solution.
+# - When automatically installing files, also have a cached list of files that must be checked every 10 seconds
+# - Only configure third parties that are needed for the target
+# - Install to build folder using symbolic links
+# - Scan source files and detect which supporting projects are needed
+# - Upgrade existing csn file by creating one automatically and merging parts of it into the existing csn file
+# - Add button to clean the build folder
 # - Better GUI: do more checks, give nice error messages, show progress bar (call cmake asynchronous, poll file system) with cancel button. Try catching cmake output using Pexpect
-# - Put special file in source root folder. When csn file is selected, check all parent path if they contain this special file and add source root folder.
 # - Have public and private related projects (hide the include paths from its clients)
 # - If ITK doesn't implement the DONT_INHERIT keyword, then use environment variables to work around the cmake propagation behaviour
-# - Fix module reloading
-# - Bad smell: Relative paths in _list are assumed to be relative to the third party binary folder. Disallow relative paths? Document in AddFilesToInstall and ResolvePathsOfFilesToInstall
-# - Give similar paths similar colours in csnGUI as visual feedback
-# - Replace string labels with class types
+
+# ToDo examples:
+# In the first example, use the import project wizard to create a csn file for GreetMe, configure and build
+# In the second example, use the import project wizard to create a csn file for HelloWorldLib. Add MyLibrary to MyCommandLine, configure and build
+# In the third example, add a csnuse the import project wizard to create a csn file for MyApplication. Add MyLibrary to MyExecutable, configure and build
+
 # End: ToDo.
 
 # add root of csnake to the system path
 sys.path.append(csnUtility.GetRootOfCSnake())
-version = 2.19
+version = 2.21
 
 # set default location of python. Note that this path may be overwritten in csnGUIHandler
 
@@ -112,6 +123,7 @@ class Generator:
 
         _targetProject.dependenciesManager.isTopLevel = _generatedList is None
         if _targetProject.dependenciesManager.isTopLevel:
+            _targetProject.installManager.ResolvePathsOfFilesToInstall()
             _generatedList = []
 
         # assert that this project is not filtered
@@ -180,14 +192,16 @@ class Generator:
         writer.GenerateConfigFile( _public = 0)
         writer.GenerateConfigFile( _public = 1)
         writer.GenerateUseFile()
-        writer.GenerateCMakeLists(generatedProjects, requiredProjects, _writeInstallCommands = _targetProject.dependenciesManager.isTopLevel)
+        writeInstallCommands = _targetProject.dependenciesManager.isTopLevel
+        #writeInstallCommands = False # hack
+        writer.GenerateCMakeLists(generatedProjects, requiredProjects, _writeInstallCommands=writeInstallCommands)
 
-    def InstallBinariesToBuildFolder(self, _targetProject):
+    def InstallFilesToBuildFolder(self, _targetProject):
         """ 
         This function copies all third party dlls to the build folder, so that you can run the executables in the
         build folder without having to build the INSTALL target.
         """
-        return _targetProject.installManager.InstallBinariesToBuildFolder()
+        return _targetProject.installManager.InstallFilesToBuildFolder()
                         
     def PostProcess(self, _targetProject):
         """

@@ -1,46 +1,47 @@
+# Author: Maarten Nieber
+
 import ConfigParser
 import csnContext
+import csnGUIOptions
 
 class Converter:
     def __init__(self, optionsFilename):
         self.section = "CSnake"
         self.optionsFilename = optionsFilename
-        self.convertedOptionsFilename = optionsFilename + ".archiveFromVersion"
         
     def ConvertOptions(self):
         parserOptions = ConfigParser.ConfigParser()
         parserOptions.read([self.optionsFilename])
         
-        versionNumber = 0.0
+        inputVersionOptions = 0.0
         if parserOptions.has_option(self.section, "version"):
-            versionNumber = parserOptions.getfloat(self.section, "version")
+            inputVersionOptions = parserOptions.getfloat(self.section, "version")
             
-        if versionNumber == 0.0:
-            parserNewOptions = ConfigParser.ConfigParser()
-
-            # rename an option within the input options file
+        if inputVersionOptions < csnGUIOptions.latestFileFormatVersion:
+        
+            if not parserOptions.has_section("ApplicationPaths"):
+                    parserOptions.add_section("ApplicationPaths")
+                    
             self.MoveOption(parserOptions, self.section, "currentguisettingsfilename", toOption = "contextfilename")
-            self.MoveOption(parserOptions, self.section, "askToLaunchVisualStudio", toOption = "askToLaunchIDE")
+            self.RemoveOption(parserOptions, self.section, "askToLaunchVisualStudio")
+            self.MoveOption(parserOptions, self.section, "visualstudiopath", toSection = "ApplicationPaths", toOption = "visualstudio2003", overwriteExisting = False)
+            self.MoveOption(parserOptions, self.section, "pythonpath", toSection = "ApplicationPaths", toOption = "python", overwriteExisting = False)
+            self.MoveOption(parserOptions, self.section, "cmakepath", toSection = "cmake2.4", overwriteExisting = False)
 
-            # move options from input options file to new options file
-            self.MoveOption(parserOptions, self.section, "visualstudiopath", toParser = parserNewOptions, toOption = "idepath")
-            self.MoveOption(parserOptions, self.section, "pythonpath", toParser = parserNewOptions)
-            self.MoveOption(parserOptions, self.section, "cmakepath", toParser = parserNewOptions)
-            self.MoveOption(parserOptions, self.section, "compiler", toParser = parserNewOptions)
-            self.MoveOption(parserOptions, self.section, "cmakebuildtype", toParser = parserNewOptions,  toOption = "configurationname")
-            
-            parserOptions.set(self.section, "version", str(csnContext.latestFileFormatVersion))
+            if not parserOptions.has_option(self.section, "automaticallyInstallFiles"):
+                parserOptions.set(self.section, "automaticallyInstallFiles", "False")
+                
+            if not parserOptions.has_option(self.section, "lastUsedImportFolder"):
+                parserOptions.set(self.section, "lastUsedImportFolder", "")
+        
+            parserOptions.set(self.section, "version", str(csnGUIOptions.latestFileFormatVersion))
             f = open(self.optionsFilename, 'w')
             parserOptions.write(f)
-            f.close()            
-
-            f = open(self.convertedOptionsFilename, 'w')
-            parserNewOptions.write(f)
-            f.close()            
+            f.close() 
             
     def Convert(self, contextFilename):
         parserOptions = ConfigParser.ConfigParser()
-        parserOptions.read([self.convertedOptionsFilename])
+        parserOptions.read([self.optionsFilename])
         
         parserContext = ConfigParser.ConfigParser()
         parserContext.read([contextFilename])
@@ -56,16 +57,23 @@ class Converter:
         if not validFile:
             return False
 
-        if inputVersion <= 0.0:
-            self.CopyOption(parserOptions, self.section, "idepath", toParser = parserContext)
-            self.CopyOption(parserOptions, self.section, "askToLaunchIDE", toParser = parserContext)
-            self.CopyOption(parserOptions, self.section, "pythonpath", toParser = parserContext)
-            self.CopyOption(parserOptions, self.section, "cmakepath",  toParser = parserContext)
-            self.CopyOption(parserOptions, self.section, "compiler",  toParser = parserContext)
-            self.CopyOption(parserOptions, self.section, "configurationname", toParser = parserContext)
-            
+        if inputVersion < csnContext.latestFileFormatVersion:
+            self.MoveOption(parserOptions, self.section, "compiler",  toParser = parserContext, toSection = self.section)
+            self.MoveOption(parserOptions, self.section, "cmakebuildtype", toParser = parserContext, toOption = "configurationname")
             self.MoveOption(parserContext, self.section, "binfolder",  toOption = "buildfolder")
+            self.MoveOption(parserOptions, self.section, "idepath", toParser = parserOptions, toSection = "ApplicationPaths", toOption = "visualstudio2003", overwriteExisting = False)
+            self.MoveOption(parserOptions, self.section, "cmakepath", toParser = parserOptions, toSection = "ApplicationPaths", toOption = "cmake2.4", overwriteExisting = False)
+            self.MoveOption(parserOptions, self.section, "pythonpath", toParser = parserOptions, toSection = "ApplicationPaths", toOption = "python", overwriteExisting = False)
+
+            if not parserContext.has_option(self.section, "cmakeversion"):
+                parserContext.set(self.section, "cmakeversion", "2.4")
+                
+            if not parserContext.has_option(self.section, "testrunnertemplate"):
+                parserContext.set(self.section, "testrunnertemplate", "normalRunner.tpl")
             
+            if not parserContext.has_option(self.section, "filter"):
+                parserContext.set(self.section, "filter", "")
+                
             index = 0
             while parserContext.has_section("RecentlyUsedCSnakeFile%s" % index):
                 self.MoveOption(
@@ -84,22 +92,28 @@ class Converter:
                 )
                 index += 1
 
-        if inputVersion <= 1.0:
             self.MoveOption(parserContext, self.section, "thirdpartybinfolder",  toOption = "thirdpartybuildfolder")
-
-        if inputVersion < csnContext.latestFileFormatVersion:
+            self.MoveOption(parserContext, self.section, "idepath", toParser = parserOptions, toOption = "visualstudio2003", toSection = "ApplicationPaths", overwriteExisting = False)
+            self.MoveOption(parserContext, self.section, "cmakepath", toParser = parserOptions, toOption = "cmake2.4", toSection = "ApplicationPaths", overwriteExisting = False)
+            self.CopyOption(parserContext, self.section, "pythonpath", toParser = parserOptions, toOption = "python", toSection = "ApplicationPaths", overwriteExisting = False)
+                
             parserContext.set(self.section, "version", str(csnContext.latestFileFormatVersion))
             f = open(contextFilename, 'w')
             parserContext.write(f)
             f.close() 
+            
+            parserOptions.set(self.section, "version", str(csnGUIOptions.latestFileFormatVersion))
+            f = open(self.optionsFilename, 'w')
+            parserOptions.write(f)
+            f.close() 
         
         return True
 
-    def MoveOption(self, fromParser, fromSection, fromOption, toParser = None, toSection = None, toOption = None):
-        self.CopyOption(fromParser, fromSection, fromOption, toParser, toSection, toOption)
-        fromParser.remove_option(fromSection, fromOption)
+    def MoveOption(self, fromParser, fromSection, fromOption, toParser = None, toSection = None, toOption = None, overwriteExisting = True):
+        self.CopyOption(fromParser, fromSection, fromOption, toParser, toSection, toOption, overwriteExisting)
+        self.RemoveOption(fromParser, fromSection, fromOption)
             
-    def CopyOption(self, fromParser, fromSection, fromOption, toParser = None, toSection = None, toOption = None):
+    def CopyOption(self, fromParser, fromSection, fromOption, toParser = None, toSection = None, toOption = None, overwriteExisting = True):
         if toParser is None:
             toParser = fromParser
         if toSection is None:
@@ -107,10 +121,22 @@ class Converter:
         if toOption is None:
             toOption = fromOption
 
-        if not (fromParser.has_section(fromSection) and fromParser.has_option(fromSection, fromOption)):
+        if (not overwriteExisting) and toParser.has_section(toSection) and toParser.has_option(toSection, toOption):
             return
+            return
+        
+        if not (fromParser.has_section(fromSection) and fromParser.has_option(fromSection, fromOption)):
+            return False
             
         if not toParser.has_section(toSection):
             toParser.add_section(toSection)
 
+        if False:
+            print "Copying option %s from section %s to option %s from section %s\n" % (fromOption, fromSection, toOption, toSection)
         toParser.set(toSection, toOption, fromParser.get(fromSection, fromOption))
+        return True
+
+    def RemoveOption(self, fromParser, fromSection, option):
+        if fromParser.has_option(fromSection, option):
+            fromParser.remove_option(fromSection, option)
+ 

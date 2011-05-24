@@ -1,3 +1,5 @@
+# Author: Maarten Nieber
+
 import csnContext
 import csnProject
 import csnUtility
@@ -10,13 +12,12 @@ class Context(csnContext.Context):
 
     def CreateProject(self, _name, _type, _sourceRootFolder = None, _categories = None):
         project = csnProject.GenericProject(_name, _type, _sourceRootFolder, _categories, _context = self)
-        project.compileManager.private.definitions.append("/Zm200")        
         return project
         
     def IsForPlatform(self, _WIN32, _NOT_WIN32):
         return _WIN32 or (not _WIN32 and not _NOT_WIN32)
 
-    def GetOutputFolder(self, _configuration = "${CMAKE_CFG_INTDIR}"):
+    def GetBuildResultsFolder(self, _configuration = "${CMAKE_CFG_INTDIR}"):
         """
         Returns the folder where the compiler should place binaries for _configuration.
         The default value for _configuration returns the output folder for the current configuration.

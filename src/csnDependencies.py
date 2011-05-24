@@ -1,5 +1,8 @@
+# Author: Maarten Nieber
+
 import csnProject
 import OrderedSet
+from csnUtility import CheckIsList, CheckIsListOrNone
 
 class DependencyError(StandardError):
     """ Used when there is a cyclic dependency between CSnake projects. """
@@ -14,6 +17,7 @@ class Manager:
         self.isTopLevel = False
         
     def AddProjects(self, _projects, _dependency = True):
+        CheckIsList(_projects)
         for project in _projects:
             projectToAdd = csnProject.ToProject(project)
             if projectToAdd.MatchesFilter() or projectToAdd in self.GetProjects():
@@ -29,6 +33,11 @@ class Manager:
                 if not _dependency:
                     self.projectsNonRequired.add( projectToAdd )
                     
+    def AddCMakeProjects(self, _projects, _dependency = True):
+        """ Adds projects that have already been configured by CMake. CSnake will use FIND_PACKAGE on these projects. """
+        CheckIsList(_projects)
+        self.AddProjects( [csnProject.Project(projectName, "third party") for projectName in _projects], _dependency )
+
     def DependsOn(self, _otherProject, _skipList = None):
         """ 
         Returns true if self is (directly or indirectly) dependent upon _otherProject. 

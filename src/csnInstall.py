@@ -1,8 +1,11 @@
+# Author: Maarten Nieber
+
 import csnUtility
 import os
 import glob
 import shutil
 import GlobDirectoryWalker
+from csnUtility import CheckIsList, CheckIsListOrNone
 
 class Manager:
     def __init__(self, _project):
@@ -12,13 +15,19 @@ class Manager:
         self.filesToInstall["Release"] = dict()
 
     def AddFilesToInstall(self, _list, _location = None, _debugOnly = 0, _releaseOnly = 0, _WIN32 = 0, _NOT_WIN32 = 0):
+        CheckIsList(_list)
         if not self.project.context.IsForPlatform(_WIN32, _NOT_WIN32):
             return
-            
+        
+        if self.project.type == "third party":
+            theList = list(_list)
+        else:
+            theList = self.project.Glob(_list)
+        
         if _location is None:
             _location = '.'
             
-        for file in _list:
+        for file in theList:
             if not _debugOnly:
                 if not self.filesToInstall["Release"].has_key(_location):
                     self.filesToInstall["Release"][_location] = []
@@ -64,7 +73,7 @@ class Manager:
                     
                 project.installManager.filesToInstall[mode] = filesToInstall
  
-    def InstallBinariesToBuildFolder(self):
+    def InstallFilesToBuildFolder(self, onlyNewerFiles=False):
         """ 
         This function copies all third party dlls to the build folder, so that you can run the executables in the
         build folder without having to build the INSTALL target.
@@ -73,16 +82,21 @@ class Manager:
         self.ResolvePathsOfFilesToInstall()
 
         for mode in ("Debug", "Release"):
-            outputFolder = self.project.context.GetOutputFolder(mode)
-            os.path.exists(outputFolder) or os.makedirs(outputFolder)
+            buildResultsFolder = self.project.context.GetBuildResultsFolder(mode)
+            os.path.exists(buildResultsFolder) or os.makedirs(buildResultsFolder)
             for project in self.project.GetProjects(_recursive = 1, _includeSelf = True):
                 for location in project.installManager.filesToInstall[mode].keys():
                     for file in project.installManager.filesToInstall[mode][location]:
-                        absLocation = "%s/%s" % (outputFolder, location)
-                        assert not os.path.isdir(file), "\n\nError: InstallBinariesToBuildFolder cannot install a folder (%s)" % file
+                        absLocation = "%s/%s" % (buildResultsFolder, location)
+                        assert not os.path.isdir(file), "\n\nError: InstallFilesToBuildFolder cannot install a folder (%s)" % file
                         os.path.exists(absLocation) or os.makedirs(absLocation)
                         assert os.path.exists(absLocation), "Could not create %s\n" % absLocation
-                        #print "Copying %s to %s\n" % (file, absLocation)
+                        if onlyNewerFiles:
+                            targetFile = "%s/%s" % (absLocation, os.path.basename(file))
+                            if os.path.exists(targetFile) and os.stat(file).st_mtime <= os.stat(targetFile).st_mtime:
+                                continue
+                            
+                        print "Install: copying %s to %s\n" % (file, absLocation)
                         fileResult = (0 != shutil.copy(file, absLocation))
                         result = fileResult and result
                         if not fileResult:

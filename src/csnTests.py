@@ -1,6 +1,9 @@
+# Author: Maarten Nieber
+
 import os
 import csnUtility
 import csnProject
+from csnUtility import CheckIsList, CheckIsListOrNone
 
 class Manager:
     def __init__(self, _project):
@@ -39,17 +42,19 @@ class Manager:
             
         self.testProject.AddSources([self.testRunnerSourceFile], _checkExists = 0, _forceAdd = 1)
         
-    def AddTests(self, listOfTests, _cxxTestProject, _enableWxWidgets = 0, _dependencies = None):
+    def AddTests(self, _listOfTests, _cxxTestProject, _enableWxWidgets = 0, _dependencies = None):
         """
         _cxxTestProject -- May be the cxxTest project instance, or a function returning a cxxTest project instance.
-        listOfTests -- List of source files containing cxx test classes.
+        _listOfTests -- List of source files containing cxx test classes.
         """
-        cxxTestProject = csnProject.ToProject(_cxxTestProject)
+        CheckIsList(_listOfTests)
+        CheckIsListOrNone(_dependencies)
         
+        cxxTestProject = csnProject.ToProject(_cxxTestProject)
         if self.testProject is None:
             self.__CreateTestProject(cxxTestProject, _enableWxWidgets)
             
-        for test in listOfTests:
+        for test in _listOfTests:
             absPathToTest = self.testProject.pathsManager.PrependRootFolderToRelativePath(test)
             self.testProject.AddSources([absPathToTest], _checkExists = 0)
 

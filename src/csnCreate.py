@@ -1,44 +1,110 @@
-def CreateCSnakeFolder(_folder, _projectRoot):
-    # check that project root exists
-    if not os.path.exists(_projectRoot):
-        raise RootNotFound, "Root folder %s not found." % (_projectRoot)
+# Author: Maarten Nieber
 
-    # check that project root is a root of _folder
-    if( len(os.path.commonprefix([_folder, _projectRoot])) != len(_projectRoot) ):
-        raise NotARoot, "%s is is not a root for %s" % (_folder, _projectRoot)
+import csnProject
+import csnContext
+import os
+import csnUtility
+from GlobDirectoryWalker import Walker
+from OrderedSet import OrderedSet
+
+class FolderImporter(object):
+    def __init__(self):
+        self.folder = ""
+        self.verbose = True
+        self.file = None
+    
+    def Import(self, folder, type):
+        self.folder = folder
+        self.context = csnContext.Context()
+        self.projectName = os.path.split(csnUtility.NormalizePath(self.folder))[1]
+        self.context.csnakeFile = "%s/csn%s.py" % (self.folder, self.projectName)
+        self.context.instance = self.projectName
+        chars = list(self.projectName)
+        chars[0] = chars[0].lower()
+        self.context.instance = "".join(chars)
+        chars[0] = chars[0].upper()
+        self.projectName = "".join(chars)
+        self.CreateInitPy()
+        self.CreateContext(type)
         
-    # create _folder, and create __init__.py files in the subtree between _projectRoot and _folder
-    os.path.exists(_folder) or os.makedirs(_folder)
-    while not os.path.normpath(_folder) == os.path.normpath(_projectRoot):
-        initFile = "%s/__init__.py" % (_folder)
+    def CreateInitPy(self):
+        initFile = "%s/__init__.py" % (self.folder)
         if not os.path.exists(initFile):
             f = open(initFile, 'w')
             f.write( "# Do not remove. Used to find python packages.\n" )
             f.close()
-        _folder = os.path.dirname(_folder)
 
-def CreateCSnakeProject(_folder, _projectRoot, _name, _type):
-    """ 
-    _name - name of the project (e.g. TestLib)
-    _type - should be 'executable', 'dll', or 'library' 
-    """
-    types = ['executable', 'dll', 'library']
-    if not _type in types:
-        raise TypeError, "Type should be 'executable', 'dll' or 'library'"
-        
-    CreateCSnakeFolder(_folder, _projectRoot)
+    def __CreateFileLists(self):
+        excludedFolderList = ("CVS", ".svn")
+        self.sourceFoldersList = OrderedSet()
+        self.testSourceFoldersList = OrderedSet()
+        self.includeFoldersList = OrderedSet()
+        for file in Walker(self.folder, ["*"], excludedFolderList):
+            extension = os.path.splitext(file)[1].lower()
+            folder = csnUtility.RemovePrefixFromPath(os.path.dirname(file), self.folder)
+            folder = csnUtility.NormalizePath(folder)
+            while folder[0] == '/':
+                folder = folder[1:]
+            if extension in csnUtility.GetSourceFileExtensions(includeDot=True):
+                pattern = "%s/*%s" % (folder, extension)
+                if "tests" in csnUtility.PathToList(folder):
+                    self.testSourceFoldersList.add(pattern)
+                else:
+                    self.sourceFoldersList.add(pattern)
+                self.includeFoldersList.add(folder)
+            if extension in csnUtility.GetIncludeFileExtensions(includeDot=True):
+                pattern = "%s/*%s" % (folder, extension)
+                if "tests" in csnUtility.PathToList(folder):
+                    self.testSourceFoldersList.add(pattern)
+                else:
+                    self.sourceFoldersList.add(pattern)
+                self.includeFoldersList.add(folder)
+
+    def CreateContext(self, type):
+        if False and os.path.exists(self.context.csnakeFile):
+            raise IOError, "Project file %s already exists\n" % (self.context.csnakeFile)
     
-    nameList = list(_name)
-    instanceName = nameList[0].lower() + ''.join(nameList[1:])
-    filename = "%s/csn%s.py" % (_folder, _name)
+        self.file = open(self.context.csnakeFile, 'w')
+
+        self.__CreateHeaderSection()
+        self.__CreateFileLists()
+
+        self.Comment("# this section imports other CSnake python modules.")
+        self.Comment("")
+
+        self.Comment("# this section creates a Project instance for storing all %s ingredients." % self.projectName)
+        self.Write("%s = csnProject.%s(\"%s\")" % (self.context.instance, type.title(), self.projectName))
+        self.Write("")
+
+        self.Comment("# The AddSources command adds a list of source files (wildcards are allowed).")
+        self.Write("%s.AddSources(%s)" % (self.context.instance, str(self.sourceFoldersList)))
+        self.Write("")
+
+        self.Comment("# The AddIncludeFolders command adds a list of folders (wildcards are allowed) where include files are found.")
+        self.Write("%s.AddIncludeFolders(%s)" % (self.context.instance, str(self.includeFoldersList)))
+        self.Write("")
+
+        if len(self.testSourceFoldersList):
+            self.Comment("# The AddTests command adds a list of source tests (wildcards are allowed).")
+            self.Write("if locals().get(\"cxxTest\"):")
+            self.Write("    %s.AddTests(%s, cxxTest)" % (self.context.instance, str(self.testSourceFoldersList)))
+            self.Write("")
+
+        self.Write("# The AddProjects command adds a list of dependency projects.")
+        self.Write("%s.AddProjects([])" % self.context.instance)
+        self.Write("")
+
+        self.file.close()
+
+    def Write(self, text):
+        self.file.write(text)
+        self.file.write("\n")
     
-    if os.path.exists(filename):
-        raise IOError, "Project file %s already exists\n" % (filename)
-        
-    f = open(filename, 'w')
-    f.write( "# Used to configure %s\n" % (_name) )
-    f.write( "import csnBuild\n" )
-    f.write( "%s = csnBuild.Project(\"%s\", \"%s\")\n" % (instanceName, _name, _type) )
-    f.write( "%s.AddSources([\"src/*.h\", \"src/*.cpp\"]) # note: argument must be a python list!\n" % (instanceName) )
-    f.write( "%s.AddIncludeFolders([\"src\"]) # note: argument must be a python list!\n" % (instanceName) )
-    f.close()
+    def Comment(self, text):
+        if self.verbose:
+            self.Write(text)
+    
+    def __CreateHeaderSection(self):
+        self.Write("# this line imports the python modules needed for CSnake")
+        self.Write("import csnProject")
+        self.Write("")

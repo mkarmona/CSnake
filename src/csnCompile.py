@@ -1,5 +1,8 @@
+# Author: Maarten Nieber
+
 import csnUtility
 import os
+from csnUtility import CheckIsList, CheckIsListOrNone
 
 class CompileAndLinkSettings:
     """ 
@@ -30,6 +33,8 @@ class Manager:
             return self.public
 
     def AddSources(self, _listOfSourceFiles, _moc = 0, _ui = 0, _sourceGroup = "", _checkExists = 1, _forceAdd = 0):
+        CheckIsList(_listOfSourceFiles)
+        
         for sourceFile in _listOfSourceFiles:
             sources = self.project.Glob(sourceFile)
             if _checkExists and not len(sources):
@@ -51,6 +56,8 @@ class Manager:
                         self.sourceGroups[_sourceGroup].append(source)
                    
     def RemoveSources(self, _listOfSourceFiles):
+        CheckIsList(_listOfSourceFiles)
+        
         for sourceFile in _listOfSourceFiles:
             sources = self.project.Glob(sourceFile)
             if not len(sources):
@@ -75,6 +82,8 @@ class Manager:
         Added include paths must exist on the filesystem.
         If an item in _listOfIncludeFolders has wildcards, all matching folders will be added to the list.
         """
+        CheckIsList(_listOfIncludeFolders)
+        
         if not self.project.context.IsForPlatform(_WIN32, _NOT_WIN32):
             return
         for includeFolder in _listOfIncludeFolders:
@@ -86,23 +95,28 @@ class Manager:
         """
         Adds items to self.publicLibraryFolders. 
         If an item has a relative path, then it will be prefixed with _sourceRootFolder.
-        Added library paths must exist on the filesystem.
         """
+        CheckIsList(_listOfLibraryFolders)
+        
         if not self.project.context.IsForPlatform(_WIN32, _NOT_WIN32):
             return
         for libraryFolder in _listOfLibraryFolders:
             for folder in self.project.Glob(libraryFolder):
-                if (not os.path.exists(folder)) or os.path.isdir(folder):
+                if os.path.isdir(folder):
                     self.public.libraryFolders.append( folder )
 
     def AddLibraries(self, _listOfLibraries, _WIN32 = 0, _NOT_WIN32 = 0, _debugOnly = 0, _releaseOnly = 0):
         """
         Adds items to self.publicLibraries. 
+        For items that are prefixed with a path, AddLibraryFolders is called automatically.
+        
         _WIN32 -- Only for Windows platforms.
         _NOT_WIN32 -- Only for non-Windows platforms.
         _debug -- Only for the Debug configuration.
         _release  -- Only for the Release configuration.
         """
+        CheckIsList(_listOfLibraries)
+        
         if not self.project.context.IsForPlatform(_WIN32, _NOT_WIN32):
             return
             
@@ -113,11 +127,17 @@ class Manager:
         if _releaseOnly:
             type = "optimized"
 
+        folders = list()
         for library in _listOfLibraries:
+            (folder, name) = os.path.split(library)
+            if folder != "" and not folder in folders:
+                folders.append(folder)
+                
             if not self.public.libraries.has_key(type):
                 self.public.libraries[type] = []
             
-            self.public.libraries[type].append(library)
+            self.public.libraries[type].append(name)
+        self.AddLibraryFolders(folders)
  
     def __FindPath(self, _path):
         """ 
@@ -140,6 +160,8 @@ class Manager:
         _WIN32 -- Only for Windows platforms.
         _NOT_WIN32 -- Only for non-Windows platforms.
         """
+        CheckIsList(_listOfDefinitions)
+        
         if not self.project.context.IsForPlatform(_WIN32, _NOT_WIN32):
             return
         self.GetConfig(_private).definitions.extend(_listOfDefinitions)

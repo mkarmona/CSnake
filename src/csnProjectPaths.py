@@ -1,3 +1,5 @@
+# Author: Maarten Nieber
+
 import glob
 import os
 import csnUtility
@@ -80,7 +82,7 @@ class Manager:
         This functions is used for being able to "install" all files in the build folder that are needed to run the application
         from the binary folder without having to install to the Install Folder.
         """
-        result = self.project.context.GetOutputFolder(_configurationName)
+        result = self.project.context.GetBuildResultsFolder(_configurationName)
         if self.project.installSubFolder != "":
             if _configurationName == "DebugAndRelease":
                 result += "/${CMAKE_CFG_INTDIR}"

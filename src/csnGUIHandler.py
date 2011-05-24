@@ -1,3 +1,5 @@
+# Author: Maarten Nieber
+
 import csnUtility
 import csnCilab # do not remove, this file needs to be included in the CSnake distribution
 import csnBuild
@@ -13,6 +15,7 @@ import os
 import pickle
 import subprocess
 import sys
+import ConfigParser
 
 class RootNotFound(IOError):
     pass
@@ -53,8 +56,9 @@ class RollbackHandler:
         sys.path = list(self.previousPaths)
                     
 class Handler:
-    def __init__(self):
+    def __init__(self, options):
         self.context = None
+        self.options = options
         self.generator = csnGenerator.Generator()
         # contains the last result of calling __GetProjectInstance
         self.cachedProjectInstance = None
@@ -75,6 +79,7 @@ class Handler:
         rollbackHandler.SetUp(self.context.csnakeFile, self.context.rootFolders, self.context.thirdPartyRootFolder)
         (projectFolder, name) = os.path.split(self.context.csnakeFile)
         (name, _) = os.path.splitext(name)
+        self.cachedProjectInstance = None
         
         try:
             projectModule = csnUtility.LoadModule(projectFolder, name)
@@ -87,7 +92,6 @@ class Handler:
 
         relocator = csnPrebuilt.ProjectRelocator()
         relocator.Do(self.cachedProjectInstance, self.context.prebuiltBinariesFolder)
-        self.UpdateRecentlyUsedCSnakeFiles()
         
         return self.cachedProjectInstance
     
@@ -97,13 +101,17 @@ class Handler:
         """
         instance = self.__GetProjectInstance()
         
-        instance.installManager.ResolvePathsOfFilesToInstall(self.context.thirdPartyBuildFolder)
         self.generator.Generate(instance)
         instance.dependenciesManager.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.GetBuildFolder())
             
         if _alsoRunCMake:
-            argList = [self.context.cmakePath, "-G", self.context.compiler, instance.GetCMakeListsFilename()]
-            process = subprocess.Popen(argList, cwd = instance.GetBuildFolder()) # , stdout=subProcess.PIPE, stderr=subProcess.PIPE
+            argList = [self.options.cmakePath, "-G", self.context.compiler, instance.GetCMakeListsFilename()]
+            try:
+                process = subprocess.Popen(argList, cwd = instance.GetBuildFolder()) # , stdout=subProcess.PIPE, stderr=subProcess.PIPE
+            except:
+                print "Error: could not open process %s in folder %s\n" % (argList, instance.GetBuildFolder())
+                sys.exit(1)
+                
             while process.poll() is None:
                 (outdata, errdata) = process.communicate()
                 if _callback:
@@ -116,17 +124,18 @@ class Handler:
                 if _callback:
                     _callback.Warn("Configuration failed.")
                     if not self.CMakeIsFound():
-                        _callback.Warn("CMake not found at %s" % self.context.cmakePath)
+                        _callback.Warn("CMake not found at %s" % self.options.cmakePath)
                 return False
+        return True
             
-    def InstallBinariesToBuildFolder(self):
-        return self.generator.InstallBinariesToBuildFolder(self.__GetProjectInstance())
+    def InstallFilesToBuildFolder(self, onlyNewerFiles=False):
+        return self.__GetProjectInstance().installManager.InstallFilesToBuildFolder(onlyNewerFiles)
              
     def CMakeIsFound(self):
-        found = os.path.exists(self.context.cmakePath) and os.path.isfile(self.context.cmakePath)
+        found = os.path.exists(self.options.cmakePath) and os.path.isfile(self.options.cmakePath)
         if not found:
             try:
-                retcode = subprocess.Popen(self.context.cmakePath).wait()
+                retcode = subprocess.Popen(self.options.cmakePath).wait()
             except:
                 retcode = 1
             found = retcode == 0
@@ -140,14 +149,14 @@ class Handler:
         """
         result = True
         os.path.exists(self.context.thirdPartyBuildFolder) or os.makedirs(self.context.thirdPartyBuildFolder)
-        argList = [self.context.cmakePath, "-G", self.context.compiler, self.context.thirdPartyRootFolder]
+        argList = [self.options.cmakePath, "-G", self.context.compiler, self.context.thirdPartyRootFolder]
         for _ in range(0, _nrOfTimes):
             result = result and 0 == subprocess.Popen(argList, cwd = self.context.thirdPartyBuildFolder).wait() 
 
         if not result:
             print "Configuration failed.\n"   
             if not self.CMakeIsFound():
-                print "Please specify correct path to CMake (current is %s)" % self.context.cmakePath 
+                print "Please specify correct path to CMake (current is %s)" % self.options.cmakePath 
                 return False
             
         return result
@@ -168,7 +177,10 @@ class Handler:
                 pycFiles = [csnUtility.NormalizePath(x) for x in glob.glob("%s/*.pyc" % folder)]
                 for pycFile in pycFiles:
                     if not os.path.basename(pycFile) == "__init__.pyc":
-                        os.remove(pycFile)
+                        try:
+                            os.remove(pycFile)
+                        except:
+                            print "Warning: could not remove file %s\n" % pycFile
 
                 newFolders.extend( [csnUtility.NormalizePath(os.path.dirname(x)) for x in glob.glob("%s/*/__init__.py" % folder)] )
             folderList = list(newFolders)
@@ -238,14 +250,12 @@ class Handler:
     def GetThirdPartySolutionPath(self):
         return "%s/CILAB_TOOLKIT.sln" % (self.context.thirdPartyBuildFolder)
     
-    def UpdateRecentlyUsedCSnakeFiles(self):
-        self.context.AddRecentlyUsed(self.context.instance, self.context.csnakeFile)
-
     def GetCategories(self, _forceRefresh = False):
         instance = self.cachedProjectInstance
         if _forceRefresh or self.ContextHasChanged():
             instance = self.__GetProjectInstance()
         categories = list()
+
         for project in instance.GetProjects(_recursive = True):
             for cat in project.categories:
                 if not cat in categories:
@@ -254,11 +264,35 @@ class Handler:
                     
     def FindAdditionalRootFolders(self):
         result = []
+        thirdPartyRootFolder = ""
         folder = csnUtility.NormalizePath(os.path.dirname(self.context.csnakeFile))
         previousFolder = ""
         while folder != previousFolder:
-            if os.path.exists("%s/rootFolder.csnake" % folder) and not folder in self.context.rootFolders:
-                result.append(folder)
+            rootFoldersFilename = "%s/rootFolders.csnake" % folder
+            if os.path.exists(rootFoldersFilename):
+                parser = ConfigParser.ConfigParser()
+                parser.read([rootFoldersFilename])
+                section = "RootFolders"
+                if not parser.has_section(section):
+                    continue
+                    
+                if parser.has_option(section, "ThirdPartyRootFolder"):
+                    thirdPartyRootFolder = parser.get(section, "ThirdPartyRootFolder")
+                    if not os.path.isabs(thirdPartyRootFolder):
+                        thirdPartyRootFolder = "%s/%s" % (folder, thirdPartyRootFolder)
+                    thirdPartyRootFolder = csnUtility.NormalizePath(thirdPartyRootFolder)
+                    if thirdPartyRootFolder == self.context.thirdPartyRootFolder:
+                        thirdPartyRootFolder = ""
+                
+                count = 0
+                while parser.has_option(section, "RootFolder%s" % count):
+                    rootFolder = parser.get(section, "RootFolder%s" % count)
+                    count += 1
+                    if not os.path.isabs(rootFolder):
+                        rootFolder = "%s/%s" % (folder, rootFolder)
+                    rootFolder = csnUtility.NormalizePath(rootFolder)
+                    if not rootFolder in self.context.rootFolders:
+                        result.append(rootFolder)
             previousFolder = folder
             folder = csnUtility.NormalizePath(os.path.split(folder)[0])
-        return result
+        return (result, thirdPartyRootFolder)

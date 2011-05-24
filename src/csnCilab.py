@@ -1,5 +1,8 @@
+# Author: Maarten Nieber
+
 import csnBuild
 import csnUtility
+from csnUtility import CheckIsList, CheckIsListOrNone
 import csnProject
 import os.path
 import new
@@ -24,6 +27,9 @@ def AddApplications(_holderProject, _applicationDependenciesList, _modules, _mod
     _modules = List of subfolders of _modulesFolder that should be processed.
     _pch - If not "", this is the C++ include file which is used for building a precompiled header file for each application.
     """
+    CheckIsList(_applicationDependenciesList)
+    CheckIsList(_modules)
+    
     for module in _modules:
         moduleFolder = "%s/%s" % (_modulesFolder, module)
         sourceFiles = []
@@ -70,6 +76,8 @@ def AddLibraryModulesMemberFunction(self, _libModules):
     If the src folder has a subfolder called 'stub', it is also added to the source tree.
     _libModules - a list of subfolders of the libmodules folder that should be 'added' to self.
     """
+    CheckIsList(_libModules)
+    
     # add sources    
     for libModule in _libModules:
         for stub in ("/stub", ""):
@@ -101,6 +109,9 @@ def AddDemosMemberFunction(self, _modules, _pch = "", _applicationDependenciesLi
     _modules - List of the subfolders within the demos subfolder that must be scanned for demos.
     _pch - If not "", this is the include file used to generate a precompiled header for each demo.
     """
+    CheckIsList(_modules)
+    CheckIsListOrNone(_applicationDependenciesList)
+    
     dependencies = [self]
     if not _applicationDependenciesList is None:
         dependencies.extend(_applicationDependenciesList)
@@ -110,7 +121,6 @@ def AddDemosMemberFunction(self, _modules, _pch = "", _applicationDependenciesLi
     csnProject.globalCurrentContext.SetSuperSubCategory("Demos", _holderName)
     if self.demosProject is None:
         self.demosProject = csnBuild.Project(_holderName, "dll", _sourceRootFolder = self.GetSourceRootFolder(), _categories = [_holderName])
-        self.demosProject.AddSources([csnUtility.GetDummyCppFilename()], _sourceGroup = "CSnakeGeneratedFiles")
         self.demosProject.AddProjects([self])
         self.AddProjects([self.demosProject], _dependency = 0)
     AddApplications(self.demosProject, dependencies, _modules, "%s/demos" % self.GetSourceRootFolder(), _pch, _holderName)
@@ -119,6 +129,9 @@ def AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependenc
     """
     Similar to AddDemos, but works on the Applications subfolder.
     """
+    CheckIsList(_modules)
+    CheckIsListOrNone(_applicationDependenciesList)
+    
     dependencies = [self]
     if not _applicationDependenciesList is None:
         dependencies.extend(_applicationDependenciesList)
@@ -159,6 +172,8 @@ def AddWidgetModulesMemberFunction(self, _widgetModules, _holdingFolder = None, 
     Similar to AddCilabLibraryModules, but this time the source code in the widgets folder is added to self.
     _useQt - If true, adds build rules for the ui and moc files .
     """
+    CheckIsList(_widgetModules)
+    
     if _holdingFolder is None:
         _holdingFolder = "widgets"
         

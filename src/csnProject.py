@@ -1,3 +1,5 @@
+# Author: Maarten Nieber
+
 import csnUtility
 import csnDependencies
 import csnProjectPaths
@@ -43,12 +45,13 @@ class Rule:
 def ToProject(project):
     """
     Helper function that tests if its argument (project) is a function. If so, it returns the result of the function. 
-    If not, it returns its argument (project). It is used to treat Project instances and functions returning a Project instance
+    In all other cases, the function returns its argument (project). It is used to treat Project instances and functions returning a Project instance
     in the same way.
     """
     result = project
     if type(project) == types.FunctionType:
         result = project()
+
     return result
 
 class GenericProject(object):
@@ -105,6 +108,9 @@ class GenericProject(object):
         
     def AddProjects(self, _projects, _dependency = True): 
         self.dependenciesManager.AddProjects(_projects, _dependency)
+
+    def AddCMakeProjects(self, _projects, _dependency = True): 
+        self.dependenciesManager.AddCMakeProjects(_projects, _dependency)
 
     def AddSources(self, _listOfSourceFiles, _moc = 0, _ui = 0, _sourceGroup = "", _checkExists = 1, _forceAdd = 0):
         self.compileManager.AddSources(_listOfSourceFiles, _moc, _ui, _sourceGroup, _checkExists, _forceAdd)
@@ -185,7 +191,7 @@ class GenericProject(object):
 
     testProject = property(GetTestProject)
     sourceRootFolder = property(GetSourceRootFolder)
-    
+
 class ProjectTest(unittest.TestCase):
     def testAddFilesToInstallWindows(self):
         location = "./Install"

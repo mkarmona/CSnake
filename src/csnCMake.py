@@ -1,10 +1,16 @@
+# Author: Maarten Nieber
+
 import csnUtility
 import os
+import csnContext
 
 class Writer:
     def __init__(self, _project):
         self.project = _project
-        self.tmpCMakeListsFile = self.project.GetCMakeListsFilename() + ".tmp"
+        self.buildArtefactsFolder = "%s/.csnake" % self.project.GetBuildFolder()
+        if not os.path.exists(self.buildArtefactsFolder):
+            os.makedirs(self.buildArtefactsFolder)
+        self.tmpCMakeListsFile = "%s/CMakeLists.tmp" % self.buildArtefactsFolder
         
     def __OpenFile(self):
         self.file = open(self.tmpCMakeListsFile, 'w')
@@ -13,8 +19,12 @@ class Writer:
         # write header and some cmake fields
         self.file.write( "# CMakeLists.txt generated automatically by the CSnake generator.\n" )
         self.file.write( "# DO NOT EDIT (changes will be lost)\n\n" )
+        
+        if self.project.dependenciesManager.isTopLevel and self.project.context.cmakeVersion == "2.6":
+            self.file.write( "CMAKE_MINIMUM_REQUIRED(VERSION 2.6)\n" )
+        
         self.file.write( "PROJECT(%s)\n" % (self.project.name) )
-        self.file.write( "SET( BINARY_DIR \"%s\")\n" % (self.project.context.GetOutputFolder(self.project.context.configurationName)) )
+        self.file.write( "SET( BINARY_DIR \"%s\")\n" % (self.project.context.GetBuildResultsFolder(self.project.context.configurationName)) )
         self.file.write( "MESSAGE( STATUS \"Processing %s\" )\n" % self.project.name )
 
         if not self.project.context.configurationName == "DebugAndRelease":
@@ -65,9 +75,17 @@ class Writer:
                 includeGuard += "Private"
             self.file.write( "\n# use %s\n" % project.name )
             self.file.write( "IF( NOT %s)\n" % includeGuard )
+            self.file.write( "MESSAGE(STATUS \"USING %s\")\n" % project.name )
             self.file.write( "SET( %s TRUE CACHE BOOL \"Internal helper\" FORCE )\n" % includeGuard )
-            self.file.write( "INCLUDE(\"%s\")\n" % (project.pathsManager.GetPathToConfigFile(public) ))
-            self.file.write( "INCLUDE(\"%s\")\n" % (project.pathsManager.GetPathToUseFile()) )
+
+            supportFindPackage = False # this is an experimental feature which is not yet tested, so disable it for the moment
+            if (not supportFindPackage) or os.path.isfile(project.pathsManager.GetPathToConfigFile(public)):
+                self.file.write( "INCLUDE(\"%s\")\n" % (project.pathsManager.GetPathToConfigFile(public) ))
+                self.file.write( "INCLUDE(\"%s\")\n" % (project.pathsManager.GetPathToUseFile()) )
+            else:
+                self.file.write( "FIND_PACKAGE(%s)\n" % project.name )
+                self.file.write( "INCLUDE(%s{%s_USE_FILE})\n" % ('%', project.name) )
+
             self.file.write( "ENDIF( NOT %s )\n" % includeGuard )
     
     def __CreateCMakeSection_SourceGroups(self):
@@ -153,7 +171,7 @@ class Writer:
         """ Create link commands in the CMakeLists.txt """
         if self.project.type in ("dll", "executable"):
             targetLinkLibraries = ""
-            for project in self.project.GetProjects(_recursive = 1, _onlyRequiredProjects = 1):
+            for project in self.project.GetProjects(_recursive=1, _onlyRequiredProjects=1, _includeSelf=1):
                 if not project.type in ("dll", "library", "executable", "prebuilt"):
                     continue
                 targetLinkLibraries = targetLinkLibraries + ("${%s_LIBRARIES} " % project.name) 
@@ -180,9 +198,13 @@ class Writer:
         csnUtility.ReplaceDestinationFileIfDifferentAndSaveBackup(self.tmpCMakeListsFile, self.project.GetCMakeListsFilename())
 
     def GenerateCMakeLists(self, _generatedProjects, _requiredProjects, _writeInstallCommands):
+        if self.project.dependenciesManager.isTopLevel:
+            self.RemoveCMakeCacheIfNecessary()
+            self.CreateCopyOfContext()
+            
         self.__OpenFile()
         self.__WriteHeader()
-        if _writeInstallCommands:
+        if self.project.dependenciesManager.isTopLevel:
             for project in self.project.GetProjects(_recursive = True, _includeSelf = True):
                 self.file.write( "SET( AlreadyUsing%s FALSE CACHE BOOL \"Internal helper\" FORCE )\n" % (project.name) )
                 self.file.write( "SET( AlreadyUsing%sPrivate FALSE CACHE BOOL \"Internal helper\" FORCE )\n" % (project.name) )
@@ -246,3 +268,18 @@ class Writer:
         # write definitions     
         if len(self.project.compileManager.public.definitions):
             f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.project.compileManager.public.definitions) )
+
+    def RemoveCMakeCacheIfNecessary(self):
+        previousContextFilename = "%s/context" % self.buildArtefactsFolder
+        if os.path.exists(previousContextFilename):
+            previousContext = csnContext.Load(previousContextFilename)
+            if previousContext.compiler != self.project.context.compiler:
+                cmakeCacheFilename = "%s/CMakeCache.txt" % self.project.GetBuildFolder()
+                cmakeCacheFilenameBackUp = "%s/CMakeCache.txt" % self.buildArtefactsFolder
+                if os.path.exists(cmakeCacheFilename):
+                    print "Moved cache %s to %s\n" % (cmakeCacheFilename, cmakeCacheFilenameBackUp)
+                    os.rename(cmakeCacheFilename, cmakeCacheFilenameBackUp)
+
+    def CreateCopyOfContext(self):
+        copyOfContextFilename = "%s/context" % self.buildArtefactsFolder
+        self.project.context.Save(copyOfContextFilename)

@@ -1,3 +1,5 @@
+# Author: Maarten Nieber
+
 import os
 import copy
 import csnUtility

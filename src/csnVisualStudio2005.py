@@ -1,3 +1,5 @@
+# Author: Maarten Nieber
+
 import csnContext
 import csnProject
 
@@ -14,7 +16,7 @@ class Context(csnContext.Context):
     def IsForPlatform(self, _WIN32, _NOT_WIN32):
         return _WIN32 or (not _WIN32 and not _NOT_WIN32)
 
-    def GetOutputFolder(self, _configuration = "${CMAKE_CFG_INTDIR}"):
+    def GetBuildResultsFolder(self, _configuration = "${CMAKE_CFG_INTDIR}"):
         """
         Returns the folder where the compiler should place binaries for _configuration.
         The default value for _configuration returns the output folder for the current configuration.

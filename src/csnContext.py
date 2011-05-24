@@ -1,10 +1,21 @@
+# Author: Maarten Nieber
+
 import ConfigParser
 import OrderedSet
 import re
+import csnUtility
+import csnProject
 
-latestFileFormatVersion = 2.0
+latestFileFormatVersion = 3.0
 
-class Context:
+def WriteHeaderComments(f):
+    """ Helper function that writes some comments into file f """
+    f.write(";CSnake context file.\n")
+    f.write(";Before manually editing this file, close any instance of\n") 
+    f.write(";CSnakeGUI using this context, or changes will be lost.\n")
+    f.write("\n")
+
+class Context(object):
     """
     Contains configuration settings such as source folder/build folder/etc.
     kdevelopProjectFolder - If generating a KDevelop project, then the KDevelop project file will be
@@ -23,19 +34,17 @@ class Context:
         self.thirdPartyRootFolder = ""
         self.instance = ""
         self.testRunnerTemplate = "normalRunner.tpl"
-        self.recentlyUsed = list()
         self.filter = ["Demos", "Applications", "Tests"]
         self.configurationName = "DebugAndRelease"
         self.compiler = "Visual Studio 7 .NET 2003"
-        self.cmakePath = "CMake"    
         self.subCategoriesOf = dict()
-        self.pythonPath = "D:/Python24/python.exe"
-        self.idePath = ""
+        self.pythonPath = ""
+        self.cmakeVersion = "2.4"
+        self.cxxTest = None
             
         self.basicFields = [
             "buildFolder", "installFolder", "prebuiltBinariesFolder", "thirdPartyBuildFolder", "csnakeFile",
-            "thirdPartyRootFolder", "instance", "testRunnerTemplate", "configurationName", "compiler",
-            "cmakePath", "pythonPath", "idePath"
+            "thirdPartyRootFolder", "instance", "testRunnerTemplate", "configurationName", "compiler", "pythonPath", "cmakeVersion"
         ]
             
     def Load(self, filename):
@@ -44,7 +53,6 @@ class Context:
             parser.read([filename])
             self.__LoadBasicFields(parser)
             self.__LoadRootFolders(parser)
-            self.__LoadRecentlyUsedCSnakeFiles(parser)
             return 1
         except:
             return 0
@@ -59,7 +67,7 @@ class Context:
             parser.read([filename])
             section = "CSnake"
             if globalFields is None:
-                globalFields = ["testRunnerTemplate", "configurationName", "compiler", "cmakePath", "pythonPath", "idePath"]
+                globalFields = ["testRunnerTemplate", "configurationName", "compiler", "pythonPath", "cmakeVersion"]
             for field in globalFields:
                 if parser.has_option(section, field):
                     setattr(self, field, parser.get(section, field))
@@ -81,53 +89,20 @@ class Context:
         while parser.has_option(section, "RootFolder%s" % count):
             self.rootFolders.append( parser.get(section, "RootFolder%s" % count) )
             count += 1
-        
-    def __LoadRecentlyUsedCSnakeFiles(self, parser):
-        self.recentlyUsed = []
-        count = 0
-        section = "RecentlyUsedCSnakeFiles"
-        while parser.has_option(section, "instance%s" % count):
-            self.AddRecentlyUsed(
-                parser.get(section, "instance%s" % count),
-                parser.get(section, "csnakeFile%s" % count)
-            )
-            count += 1
-    
-    def __SaveRecentlyUsedCSnakeFiles(self, parser):
-        section = "RecentlyUsedCSnakeFiles"
-        if not parser.has_section(section):
-            parser.add_section(section)
-        for index in range(len(self.recentlyUsed)):
-            parser.set(section, "instance%s" % index, self.recentlyUsed[index].instance) 
-            parser.set(section, "csnakeFile%s" % index, self.recentlyUsed[index].csnakeFile) 
-
-    def AddRecentlyUsed(self, _instance, _csnakeFile):
-        for item in range( len(self.recentlyUsed) ):
-            x = self.recentlyUsed[item]
-            if (x.instance == _instance and x.csnakeFile == _csnakeFile):
-                self.recentlyUsed.remove(x)
-                self.recentlyUsed.insert(0, x)
-                return
-        
-        x = Context()
-        (x.instance, x.csnakeFile) = (_instance, _csnakeFile)
-        self.recentlyUsed.insert(0, x)
-    
-    def IsCSnakeFileInRecentlyUsed(self):
-        """ Returns True if self.csnakeFile is in the list of recently used csnake files """
-        result = False
-        for item in range( len(self.recentlyUsed) ):
-            x = self.recentlyUsed[item]
-            if (x.csnakeFile == self.csnakeFile):
-                result = True
-        return result
     
     def Save(self, filename):
         parser = ConfigParser.ConfigParser()
+        parser.read([filename])
+        
         section = "CSnake"
-        parser.add_section(section)
+        if not parser.has_section(section):
+            parser.add_section(section)
         parser.set(section, "version", str(latestFileFormatVersion))
+        
+        # clear root folder section
         rootFolderSection = "RootFolders"
+        if parser.has_section(rootFolderSection):
+            parser.remove_section(rootFolderSection)
         parser.add_section(rootFolderSection)
 
         for basicField in self.basicFields:
@@ -137,9 +112,9 @@ class Context:
         while count < len(self.rootFolders):
             parser.set(rootFolderSection, "RootFolder%s" % count, self.rootFolders[count] )
             count += 1
-        self.__SaveRecentlyUsedCSnakeFiles(parser)
         
         f = open(filename, 'w')
+        WriteHeaderComments(f)
         parser.write(f)
         f.close()
 
@@ -155,6 +130,14 @@ class Context:
     def GetThirdPartyBuildFolder(self):
         return self.thirdPartyBuildFolder
         
+    def GetCxxTest(self):
+        """ Return the cxxTest Project """
+        resourcesFolder = csnUtility.GetRootOfCSnake() + "/resources"
+        if self.cxxTest is None:
+            self.cxxTest = csnProject.Library("CSnakeCxxTest", _sourceRootFolder = resourcesFolder)
+            self.cxxTest.AddIncludeFolders(["CxxTest"])
+        return self.cxxTest
+        
     thirdPartyBinFolder = property(GetThirdPartyBuildFolder) # for backward compatibility
 
 import csnKDevelop
@@ -164,9 +147,11 @@ import csnVisualStudio2008
         
 def Load(filename):
     parser = ConfigParser.ConfigParser()
-    parser.read([filename])
+    assert parser.read([filename]), "Could not read from %s\n" % filename
+   
     compiler = parser.get("CSnake", "compiler")
     context = None
+    
     if compiler in ("KDevelop3", "Unix Makefiles"):
         context = csnKDevelop.Context()
     elif compiler == "Visual Studio 7 .NET 2003":
