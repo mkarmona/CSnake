@@ -182,7 +182,7 @@ class PathPickerEditor(wx.grid.PyGridCellEditor):
     def Show(self, show, attr):
         super(PathPickerEditor, self).Show(show, attr)
  
-    def PaintBackground(self, rect, attr):
+    def PaintBackground(self, rect, attr, oldVal=None):
         pass
  
     def BeginEdit(self, row, col, grid):
@@ -192,7 +192,7 @@ class PathPickerEditor(wx.grid.PyGridCellEditor):
         self._picker.SetGrid(row, col, grid)
         self._picker.SetFocus()
  
-    def EndEdit(self, row, col, grid):
+    def EndEdit(self, row, col, grid, oldVal=None):
         changed = False
         value = self._picker.GetValue()
         if value != self.value:
@@ -291,7 +291,8 @@ class CSnakeGUIApp(wx.App):
         # flag to know if running a configure all
         self.__runningConfigureAll = False 
         
-        wx.InitAllImageHandlers()
+        # deprecated so it can be removed from the code
+        # wx.InitAllImageHandlers()
         
         xrcFile = csnUtility.GetRootOfCSnake() + "/resources/csnGUI.xrc"
         self.res = xrc.XmlResource(xrcFile)
